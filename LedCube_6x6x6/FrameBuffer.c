@@ -44,90 +44,6 @@ void initFrameBuffer(FrameBuffer* framebuffer)
 }
 
 
-void frameBufferToBits(FrameBuffer* framebuffer)
-{
-/*
-    int k, i, j, offset, i_;
-    for (k=0; k<framebuffer->size; k++)
-    {
-        framebuffer->bufferBits[k][0] = 0x00;
-        framebuffer->bufferBits[k][1] = 0x00;
-        for (i=0; i<framebuffer->size; i++)
-        {
-            for (j=0; j<framebuffer->size; j++)
-            {
-                if (framebuffer->buffer[k][i][j])
-                {
-                    if (i < 2)
-                    {
-                        offset = framebuffer->size*i + j;
-                        framebuffer->bufferBits[k][i/2] |= (0x80 >> offset);
-                    }
-
-                    else
-                    {
-
-                        i_ = i-2;
-                        offset = framebuffer->size*i_ + j;
-                        framebuffer->bufferBits[k][i/2] |= (0x80 >> offset);
-                    }
-                }
-            }
-        }
-    }    
-*/
-}
-
-
-void frameBufferToBits_DB(FrameBuffer* framebuffer)
-{
-/*
-    //Will actually need to initialze temp buffer bits to 0
-    uint8_t temp[FBUF_SZ][FBUF_REGS];// = {
-                            //{0x00, 0x00},
-                            //{0x00, 0x00},
-                            //{0x00, 0x00},
-                            //{0x00, 0x00}
-                        //};
-                        
-    int k, i, j, offset, i_;
-    for (k=0; k<framebuffer->size; k++)
-    {
-        //Could initilaze temp buffer here
-        //
-        //    Initilzation code...
-        //
-        for (i=0; i<framebuffer->size; i++)
-        {
-            for (j=0; j<framebuffer->size; j++)
-            {
-                if (framebuffer->buffer[k][i][j])
-                {
-                    if (i < 2)
-                    {
-                        offset = framebuffer->size*i + j;
-                        temp[k][i/2] |= (0x80 >> offset);
-                    }
-
-                    else
-                    {
-
-                        i_ = i-2;
-                        offset = framebuffer->size*i_ + j;
-                        temp[k][i/2] |= (0x80 >> offset);
-                    }
-                }
-            }
-        }
-    }
-    for (int i=0; i<FBUF_SZ; i++)
-    {
-        framebuffer->bufferBits[i][0] = temp[i][0];
-        framebuffer->bufferBits[i][1] = temp[i][1];
-    }
-*/
-}
-
 void frameBufferToBits_DB_NEW(FrameBuffer* framebuffer)
 {
     //Will actually need to initialze temp buffer bits to 0
@@ -199,6 +115,10 @@ void colorToBits(uint8_t color_array[3][FBUF_REGS], int reg_idx, int offset, uin
             color_array[color_idx][reg_idx] |= (1 << offset);
     }
 }
+
+
+
+
 /**********************************/
 /*                                */
 /*       Drawing Functions        */
@@ -318,11 +238,11 @@ void togglePixel(FrameBuffer *framebuffer, uint8_t x, uint8_t y, uint8_t z)
         framebuffer->buffer[z][x][y] = 0;
 }
 
-void drawVector3d(FrameBuffer *framebuffer, Vector3d point)
+void drawVector3d(FrameBuffer *framebuffer, Vector3d point, uint8_t color)
 {
-    setPixel(framebuffer, (uint8_t)point.x, (uint8_t)point.y, (uint8_t)point.z);
+    setPixelColor(framebuffer, (uint8_t)point.x, (uint8_t)point.y, (uint8_t)point.z, color);
 }
-void drawLine(FrameBuffer *framebuffer, uint8_t axis, uint8_t x, uint8_t y)
+void drawLine(FrameBuffer *framebuffer, uint8_t axis, uint8_t x, uint8_t y, uint8_t color)
 {
     //assume Z-axis for now
     switch (axis)
@@ -331,26 +251,399 @@ void drawLine(FrameBuffer *framebuffer, uint8_t axis, uint8_t x, uint8_t y)
         case 0:
         {
             for (int k=0; k<framebuffer->size; k++)
-                setPixel(framebuffer, x, k, y);
+                setPixelColor(framebuffer, x, k, y, color);
             break;
         }
         //Normal to YZ-plane
         case 1:
         {
             for (int k=0; k<framebuffer->size; k++)
-                setPixel(framebuffer, k, x, y);
+                setPixelColor(framebuffer, k, x, y, color);
             break;
         }
         //Normal to XY-plane
         default:
         {
             for (int k=0; k<framebuffer->size; k++)
-                setPixel(framebuffer, x, y, k);
+                setPixelColor(framebuffer, x, y, k, color);
             break;
         }
     }
 }
-void drawPlane(FrameBuffer *framebuffer, uint8_t axis, uint8_t level)
+int drawLine2d(FrameBuffer *framebuffer, uint8_t axis, uint8_t level, int x0, int y0, int x1, int y1, uint8_t color)
+{
+    int W = x1 - x0;
+    int H = y1 - y0;
+    if (W < 0)
+        W *= -1;
+    if (H < 0)
+        H *= -1;
+
+   
+    if (W >= H)
+    {
+        //-1 < M < 1
+        if (x0 > x1)
+        {
+            int temp = x0;
+            x0 = x1;
+            x1 = temp;
+
+            temp = y0;
+            y0 = y1;
+            y1 = temp;
+        }
+        int dx = x1 - x0;
+        int dy = y1 - y0;
+        int y = y0;
+        int eps = 0;
+
+        for (int x = x0; x <= x1; x++)
+        {
+            switch (axis)
+            {
+                case 0://XZ Plane
+                {
+                    setPixelColor(framebuffer, (uint8_t)x, level, (uint8_t)y, color);
+                    break;
+                }
+                case 1://YZ Plane
+                {
+                    setPixelColor(framebuffer, level, (uint8_t)x, (uint8_t)y, color);
+                    break;
+                }
+                case 2://XY Plane
+                {
+                    setPixelColor(framebuffer, (uint8_t)x, (uint8_t)y, level, color);
+                    break;
+                }
+            }
+            //setPixel(x, y, 1);
+            eps += dy;
+            if (dy >= 0)
+            {
+                if ((eps << 1) >= dx)
+                {
+                    y++;
+                    eps -= dx;
+                }
+            }
+            else
+            {
+                if ((eps << 1) <= -1*dx)
+                {
+                    y--;
+                    eps += dx;
+                }
+            }
+        }
+    }
+    else
+    {
+        //M > 1 || M < -1
+        if (y0 > y1)
+        {
+            int temp = x0;
+            x0 = x1;
+            x1 = temp;
+
+            temp = y0;
+            y0 = y1;
+            y1 = temp;
+        }
+
+        int dx = x1 - x0;
+        int dy = y1 - y0;
+        int x = x0;
+        int eps = 0;
+
+        for (int y = y0; y <= y1; y++)
+        {
+            switch (axis)
+            {
+                case 0://XZ Plane
+                {
+                    setPixelColor(framebuffer, (uint8_t)x, level, (uint8_t)y, color);
+                    break;
+                }
+                case 1://YZ Plane
+                {
+                    setPixelColor(framebuffer, level, (uint8_t)x, (uint8_t)y, color);
+                    break;
+                }
+                case 2://XY Plane
+                {
+                    setPixelColor(framebuffer, (uint8_t)x, (uint8_t)y, level, color);
+                    break;
+                }
+            }
+            //setPixel(x, y, 1);
+            eps += dx;
+            if (dx >= 0)
+            {
+                if ((eps << 1) >= dy)
+                {
+                    x++;
+                    eps -= dy;
+                }
+            }
+            else
+            {
+                if ((eps << 1) <= -1*dy)
+                {
+                    x--;
+                    eps += dy;
+                }
+            }
+        }
+    }
+    return 0;
+}
+int drawLine3d(FrameBuffer *framebuffer, Vector3d* start, Vector3d *end, uint8_t color)
+{
+    int x0 = start->x, y0 = start->y, z0 = start->z;
+    int x1 = end->x, y1 = end->y, z1 = end->z;
+
+    int L = x1 - x0;
+    int W = y1 - y0;
+    int H = z1 - z0;
+    if (L < 0)
+        L *= -1;
+    if (W < 0)
+        W *= -1;
+    if (H < 0)
+        H *= -1;
+
+    int dimensions[3] = {L, W, H};
+    int max_dimen = dimensions[0];
+    int max_idx = 0;
+    for (int i=1; i<3; i++)
+    {
+        if (dimensions[i] > max_dimen)
+        {
+            max_dimen = dimensions[i];
+            max_idx = i;
+        }
+    }
+
+    switch(max_idx)
+    {
+        case 0://Step along x-axis
+        {
+            if (x0 > x1)
+            {
+                int temp = x0;
+                x0 = x1;
+                x1 = temp;
+
+                temp = y0;
+                y0 = y1;
+                y1 = temp;
+
+                temp = z0;
+                z0 = z1;
+                z1 = temp;
+            }
+
+            int dx = x1 - x0;
+            int dy = y1 - y0;
+            int dz = z1 - z0;
+            int y = y0;
+            int z = z0;
+
+            int eps_y = 0;
+            int eps_z = 0;
+
+            for (int x = x0; x <= x1; x++)
+            {
+                setPixelColor(framebuffer, (uint8_t)x, (uint8_t)y, (uint8_t)z, color);
+                //setPixel(x, y, 1);
+                eps_y += dy;
+                if (dy >= 0)
+                {
+                    if ((eps_y << 1) >= dx)
+                    {
+                        y++;
+                        eps_y -= dx;
+                    }
+                }
+                else
+                {
+                    if ((eps_y << 1) <= -1*dx)
+                    {
+                        y--;
+                        eps_y += dx;
+                    }
+                }
+
+
+                //setPixel(x+30, z, 1);
+                eps_z += dz;
+                if (dz >= 0)
+                {
+                    if ((eps_z << 1) >= dx)
+                    {
+                        z++;
+                        eps_z -= dx;
+                    }
+                }
+                else
+                {
+                    if ((eps_z << 1) <= -1*dx)
+                    {
+                        z--;
+                        eps_z += dx;
+                    }
+                }
+            }
+            break;
+        }
+        case 1://Step along y-axis
+        {
+            if (y0 > y1)
+            {
+                int temp = x0;
+                x0 = x1;
+                x1 = temp;
+
+                temp = y0;
+                y0 = y1;
+                y1 = temp;
+
+                temp = z0;
+                z0 = z1;
+                z1 = temp;
+            }
+
+            int dx = x1 - x0;
+            int dy = y1 - y0;
+            int dz = z1 - z0;
+            int x = x0;
+            int z = z0;
+
+            int eps_x = 0;
+            int eps_z = 0;
+
+            for (int y = y0; y <= y1; y++)
+            {
+                setPixelColor(framebuffer, (uint8_t)x, (uint8_t)y, (uint8_t)z, color);
+                //setPixel(x, y, 1);
+                eps_x += dx;
+                if (dx >= 0)
+                {
+                    if ((eps_x << 1) >= dy)
+                    {
+                        x++;
+                        eps_x -= dy;
+                    }
+                }
+                else
+                {
+                    if ((eps_x << 1) <= -1*dy)
+                    {
+                        x--;
+                        eps_x += dy;
+                    }
+                }
+
+
+                //setPixel(x+30, z, 1);
+                eps_z += dz;
+                if (dz >= 0)
+                {
+                    if ((eps_z << 1) >= dy)
+                    {
+                        z++;
+                        eps_z -= dy;
+                    }
+                }
+                else
+                {
+                    if ((eps_z << 1) <= -1*dy)
+                    {
+                        z--;
+                        eps_z += dy;
+                    }
+                }
+            }
+            break;
+        }
+        case 2://Step along z-axis
+        {
+            if (z0 > z1)
+            {
+                int temp = x0;
+                x0 = x1;
+                x1 = temp;
+
+                temp = y0;
+                y0 = y1;
+                y1 = temp;
+
+                temp = z0;
+                z0 = z1;
+                z1 = temp;
+            }
+
+            int dx = x1 - x0;
+            int dy = y1 - y0;
+            int dz = z1 - z0;
+            int x = x0;
+            int y = y0;
+
+            int eps_x = 0;
+            int eps_y = 0;
+
+            
+            for (int z = z0; z <= z1; z++)
+            {
+                setPixelColor(framebuffer, (uint8_t)x, (uint8_t)y, (uint8_t)z, color);
+                //setPixel(x, y, 1);
+                eps_x += dx;
+                if (dx >= 0)
+                {
+                    if ((eps_x << 1) >= dz)
+                    {
+                        x++;
+                        eps_x -= dz;
+                    }
+                }
+                else
+                {
+                    if ((eps_x << 1) <= -1*dz)
+                    {
+                        x--;
+                        eps_x += dz;
+                    }
+                }
+
+
+                //setPixel(x+30, z, 1);
+                eps_y += dy;
+                if (dy >= 0)
+                {
+                    if ((eps_y << 1) >= dz)
+                    {
+                        y++;
+                        eps_y -= dz;
+                    }
+                }
+                else
+                {
+                    if ((eps_y << 1) <= -1*dz)
+                    {
+                        y--;
+                        eps_y += dz;
+                    }
+                }
+            }
+            break;
+        }
+    }
+    return 0;
+}
+
+void drawPlane(FrameBuffer *framebuffer, uint8_t axis, uint8_t level, uint8_t color)
 {
     switch (axis)
     {
@@ -360,7 +653,7 @@ void drawPlane(FrameBuffer *framebuffer, uint8_t axis, uint8_t level)
             {
                 for (int j=0; j<framebuffer->size; j++)
                 {
-                    setPixel(framebuffer, i, level, j);
+                    setPixelColor(framebuffer, i, level, j, color);
                 }
             }
             break;
@@ -371,7 +664,7 @@ void drawPlane(FrameBuffer *framebuffer, uint8_t axis, uint8_t level)
             {
                 for (int j=0; j<framebuffer->size; j++)
                 {
-                    setPixel(framebuffer, level, i, j);
+                    setPixelColor(framebuffer, level, i, j, color);
                 }
             }
             break;
@@ -382,13 +675,14 @@ void drawPlane(FrameBuffer *framebuffer, uint8_t axis, uint8_t level)
             {
                 for (int j=0; j<framebuffer->size; j++)
                 {
-                    setPixel(framebuffer, i, j, level);
+                    setPixelColor(framebuffer, i, j, level, color);
                 }
             }
             break;
         }
     }
 }
+/*
 void clearPlane(FrameBuffer *framebuffer, uint8_t axis, uint8_t level)
 {
     switch (axis)
@@ -428,6 +722,7 @@ void clearPlane(FrameBuffer *framebuffer, uint8_t axis, uint8_t level)
         }
     }
 }
+*/
 
 void drawBox(FrameBuffer *framebuffer, Vector3d* start, Vector3d* end, uint8_t color)
 {
@@ -494,7 +789,7 @@ void drawBox(FrameBuffer *framebuffer, Vector3d* start, Vector3d* end, uint8_t c
 
 
 //Need to change function definition for function to be scaleable, 16 bit number input assumes 4x4x4 cube
-void drawBinaryNumber(FrameBuffer *framebuffer, uint16_t number, uint8_t axis, uint8_t level)
+void drawBinaryNumber(FrameBuffer *framebuffer, uint16_t number, uint8_t axis, uint8_t level, uint8_t color)
 {
     for (int i=0; i<16; i++)
     {
@@ -508,7 +803,7 @@ void drawBinaryNumber(FrameBuffer *framebuffer, uint16_t number, uint8_t axis, u
             case 0:
             {
                 if (number & (1 << (15-i)))
-                    setPixel(framebuffer, col, level, 3-row);
+                    setPixelColor(framebuffer, col, level, 3-row, color);
                 else
                     clearPixel(framebuffer, col, level, 3-row);
                 break;
@@ -516,7 +811,7 @@ void drawBinaryNumber(FrameBuffer *framebuffer, uint16_t number, uint8_t axis, u
             case 1:
             {
                 if (number & (1 << (15-i)))
-                    setPixel(framebuffer, level, col, 3-row);
+                    setPixelColor(framebuffer, level, col, 3-row, color);
                 else
                     clearPixel(framebuffer, level, col, 3-row);
                 break;
@@ -524,7 +819,7 @@ void drawBinaryNumber(FrameBuffer *framebuffer, uint16_t number, uint8_t axis, u
             default:
             {
                 if (number & (1 << (15-i)))
-                    setPixel(framebuffer, row, col, level);
+                    setPixelColor(framebuffer, row, col, level, color);
                 else
                     clearPixel(framebuffer, row, col, level);
                 break;
@@ -663,60 +958,181 @@ void shiftPlane_anm(FrameBuffer *framebuffer, uint8_t axis, uint8_t color, int d
 //Function hardcoded for 4x4x4 led cube
 void rotatePlane_anm(FrameBuffer *framebuffer, uint8_t axis, uint8_t color, int delay)
 {
+    //Work on after you have line drawing algorithm, will make much easier to scale
+    for (int i=0; i<FBUF_SZ; i++)
+    {
+        clearFrameBuffer_(framebuffer);
+        for (int j = 0; j < FBUF_SZ; j++)
+            drawLine2d(framebuffer, axis, j, 0, i, FBUF_SZ-1, FBUF_SZ-1-i, color);
+        frameBufferToBits_DB_NEW(framebuffer);
+        delay_ms(delay);
+    }
+    for (int i=1; i<FBUF_SZ-1; i++)
+    {
+        clearFrameBuffer_(framebuffer);
+        for (int j = 0; j < FBUF_SZ; j++)
+            drawLine2d(framebuffer, axis, j, i, FBUF_SZ-1, FBUF_SZ-1-i, 0, color);
+        frameBufferToBits_DB_NEW(framebuffer);
+        delay_ms(delay);
+    }
+
+/*
     clearFrameBuffer_(framebuffer);
-    drawLine(framebuffer, axis, 0, 3);
-    drawLine(framebuffer, axis, 1, 2);
-    drawLine(framebuffer, axis, 2, 1);
-    drawLine(framebuffer, axis, 3, 0);
+    drawLine(framebuffer, axis, 0, 3, color);
+    drawLine(framebuffer, axis, 1, 2, color);
+    drawLine(framebuffer, axis, 2, 1, color);
+    drawLine(framebuffer, axis, 3, 0, color);
     frameBufferToBits_DB_NEW(framebuffer);
     delay_ms(delay);
 
     clearFrameBuffer_(framebuffer);
-    drawLine(framebuffer, axis, 1, 3);
-    drawLine(framebuffer, axis, 1, 2);
-    drawLine(framebuffer, axis, 2, 1);
-    drawLine(framebuffer, axis, 2, 0);
+    drawLine(framebuffer, axis, 1, 3, color);
+    drawLine(framebuffer, axis, 1, 2, color);
+    drawLine(framebuffer, axis, 2, 1, color);
+    drawLine(framebuffer, axis, 2, 0, color);
     frameBufferToBits_DB_NEW(framebuffer);
     delay_ms(delay);   
 
     clearFrameBuffer_(framebuffer);
-    drawLine(framebuffer, axis, 2, 3);
-    drawLine(framebuffer, axis, 2, 2);
-    drawLine(framebuffer, axis, 1, 1);
-    drawLine(framebuffer, axis, 1, 0);
+    drawLine(framebuffer, axis, 2, 3, color);
+    drawLine(framebuffer, axis, 2, 2, color);
+    drawLine(framebuffer, axis, 1, 1, color);
+    drawLine(framebuffer, axis, 1, 0, color);
     frameBufferToBits_DB_NEW(framebuffer);
     delay_ms(delay);
 
     clearFrameBuffer_(framebuffer);
-    drawLine(framebuffer, axis, 0, 0);
-    drawLine(framebuffer, axis, 1, 1);
-    drawLine(framebuffer, axis, 2, 2);
-    drawLine(framebuffer, axis, 3, 3);
+    drawLine(framebuffer, axis, 0, 0, color);
+    drawLine(framebuffer, axis, 1, 1, color);
+    drawLine(framebuffer, axis, 2, 2, color);
+    drawLine(framebuffer, axis, 3, 3, color);
     frameBufferToBits_DB_NEW(framebuffer);
     delay_ms(delay);
 
     clearFrameBuffer_(framebuffer);
-    drawLine(framebuffer, axis, 0, 1);
-    drawLine(framebuffer, axis, 1, 1);
-    drawLine(framebuffer, axis, 2, 2);
-    drawLine(framebuffer, axis, 3, 2);
+    drawLine(framebuffer, axis, 0, 1, color);
+    drawLine(framebuffer, axis, 1, 1, color);
+    drawLine(framebuffer, axis, 2, 2, color);
+    drawLine(framebuffer, axis, 3, 2, color);
     frameBufferToBits_DB_NEW(framebuffer);
     delay_ms(delay);
 
     clearFrameBuffer_(framebuffer);
-    drawLine(framebuffer, axis, 0, 2);
-    drawLine(framebuffer, axis, 1, 2);
-    drawLine(framebuffer, axis, 2, 1);
-    drawLine(framebuffer, axis, 3, 1);
+    drawLine(framebuffer, axis, 0, 2, color);
+    drawLine(framebuffer, axis, 1, 2, color);
+    drawLine(framebuffer, axis, 2, 1, color);
+    drawLine(framebuffer, axis, 3, 1, color);
     frameBufferToBits_DB_NEW(framebuffer);
     delay_ms(delay);
+*/
 }
 //Function hardcoded for 4x4x4 led cube
-void snake_anm(FrameBuffer *framebuffer, uint8_t loops, int delay)
+void snake_anm(FrameBuffer *framebuffer, uint8_t loops, uint8_t color, int delay)
 {
+    //Consider doing a random walk algorithm instead, it'd be easier to implement and more scalable
+    int steps_per_loop = 5;
+    Snake snake_random;
+    delay /= 2;
+    int x, y, z;
+    int x_old = -1, y_old = 11 , z_old = -1;
+    x = rand()%FBUF_SZ;
+    y = rand()%FBUF_SZ;
+    z = rand()%FBUF_SZ;
+    initSnake(&snake_random, BODY_LEN, x, y, z);
+    for (int i=0; i<snake_random.body_len; i++)
+    {
+        snake_random.bodyColor[i] = color;
+        //snake_random.bodyColor[i] = rand()%7+1;
+    }    
+    for (int i=0; i<loops; i++)
+    {
+        for (int j=0; j<steps_per_loop; j++)
+        {
+            while (1)
+            {
+                uint8_t dir = rand()%6;
+                int x_ = x, y_ = y, z_ = z;
+                switch (dir)
+                {
+                    case 0:
+                    {
+                        x_--;
+                        break;
+                    }
+                    case 1:
+                    {
+                        y_++;
+                        break;
+                    }
+                    case 2:
+                    {
+                        x_++;
+                        break;
+                    }
+                    case 3:
+                    {
+                        y_--;
+                        break;
+                    }
+                    case 4:
+                    {
+                        z_++;
+                        break;
+                    }
+                    case 5:
+                    {
+                        z_--;
+                        break;
+                    }
+                }
+
+                if (x_ >= FBUF_SZ)
+                {
+                    x_ = 0;
+                }
+                if (x_ < 0)
+                {
+                    x_ = FBUF_SZ - 1;
+                }
+                if (y_ >= FBUF_SZ)
+                {
+                    y_ = 0;
+                }
+                if (y_ < 0)
+                {
+                    y_ = FBUF_SZ - 1;
+                }
+                if (z_ >= FBUF_SZ)
+                {
+                    z_ = 0;
+                }
+                if (z_ < 0)
+                {
+                    z_ = FBUF_SZ - 1;
+                }
+
+                if ((x_ != x_old)||(y_ != y_old)||(z_ != z_old))
+                {
+                    x = x_;
+                    y = y_;
+                    z = z_;
+                    break;
+                }
+            }
+
+            clearFrameBuffer_(framebuffer);
+            setHead(&snake_random, x, y, z);
+            drawSnake(framebuffer, &snake_random);
+            frameBufferToBits_DB_NEW(framebuffer);
+            delay_ms(delay); 
+        } 
+    }
+    return;
+
+
     delay /= 2; 
     Snake snake;    
-    initSnake(&snake, 0, 0, 0);
+    initSnake(&snake, BODY_LEN, 0, 0, 0);
     for (int l=0; l<loops; l++)
     {
         //int x = framebuffer->size-1;
@@ -947,9 +1363,9 @@ void snake_anm(FrameBuffer *framebuffer, uint8_t loops, int delay)
     }
     
 }
-void tallyScore_anm(FrameBuffer *framebuffer, int score, uint8_t axis, int delay)
+void tallyScore_anm(FrameBuffer *framebuffer, int score, uint8_t axis, uint8_t color, int delay)
 {
-    int loops = score/16 + 1;
+    //int loops = score/16 + 1;
     int tallies = 0;
 
     clearFrameBuffer_(framebuffer);
@@ -964,20 +1380,21 @@ void tallyScore_anm(FrameBuffer *framebuffer, int score, uint8_t axis, int delay
             switch (axis)
             {
                 case 0:
-                    setPixel(framebuffer, col, 0, row);
+                    setPixelColor(framebuffer, col, 0, row, color);
                     break;
                 case 1:
-                    setPixel(framebuffer, 0, col, row);
+                    setPixelColor(framebuffer, 0, col, row, color);
                     break;  
                 default:
-                    setPixel(framebuffer, FBUF_SZ-1-row, col, 0);
+                    setPixelColor(framebuffer, FBUF_SZ-1-row, col, 0, color);
                     break;
             }
             //setPixel(framebuffer, 0, col, row);
-            frameBufferToBits_DB(framebuffer);
+            frameBufferToBits_DB_NEW(framebuffer);
         }
         //clearPlane(framebuffer, 1, FBUF_SZ-1);
-        clearPlane(framebuffer, axis, FBUF_SZ-1);
+        //clearPlane(framebuffer, axis, FBUF_SZ-1);
+        drawPlane(framebuffer, axis, FBUF_SZ-1, 0);//Same as clearing plane
         for (int i=0; i<FBUF_SZ&&score; i++)
         {
             for (int j=0; j<FBUF_SZ&&score; j++)
@@ -987,18 +1404,18 @@ void tallyScore_anm(FrameBuffer *framebuffer, int score, uint8_t axis, int delay
                 switch (axis)
                 {
                     case 0:
-                        setPixel(framebuffer, i, FBUF_SZ-1, j);
+                        setPixelColor(framebuffer, i, FBUF_SZ-1, j, color);
                         break;
                     case 1:
-                        setPixel(framebuffer, FBUF_SZ-1, i, j);
+                        setPixelColor(framebuffer, FBUF_SZ-1, i, j, color);
                         break;
                     default:
-                        setPixel(framebuffer, FBUF_SZ-1-j, i, FBUF_SZ-1);
+                        setPixelColor(framebuffer, FBUF_SZ-1-j, i, FBUF_SZ-1, color);
                         break;
                 }
                 
                 //setPixel(framebuffer, FBUF_SZ-1, i, j);
-                frameBufferToBits_DB(framebuffer);
+                frameBufferToBits_DB_NEW(framebuffer);
                 delay_ms(delay);
             }
         }
@@ -1012,18 +1429,19 @@ void tallyScore_anm(FrameBuffer *framebuffer, int score, uint8_t axis, int delay
     }
     delay_ms(delay*15);
 }
-void sinWave_anm(FrameBuffer *framebuffer)
+void sinWave_anm(FrameBuffer *framebuffer, uint8_t color)
 {
-    float inc = M_PI/8.0;
+
+    //float inc = M_PI/8.0;
     //for (int t=0; t<20; t++)
     //{
         clearFrameBuffer_(framebuffer);
         for (int x=0; x<FBUF_SZ; x++)
         {
             float value = /*(FBUF_SZ/2)*sin(x*inc) + */FBUF_SZ/2;
-            setPixel(framebuffer, x, 0, (int)value);
+            setPixelColor(framebuffer, x, 0, (int)value, color);
         }
-        frameBufferToBits_DB(framebuffer);
+        frameBufferToBits_DB_NEW(framebuffer);
         delay_ms(500);
     //}
 }
@@ -1106,13 +1524,180 @@ void ballBounce_anm(FrameBuffer *framebuffer, int delay)
         setPixelColor(framebuffer, (uint8_t)x, (uint8_t)y, (uint8_t)z, color);
         frameBufferToBits_DB_NEW(framebuffer);
         delay_ms(delay);
+        //break;
     }
 }
-void boxExpand_anm(FrameBuffer *framebuffer, uint8_t color, int delay)
+void boxExpand_anm(FrameBuffer *framebuffer, Vector3d *movement, uint8_t color, int delay)
 {
-    
-}
+    //If vector has negative component, decrease end
+    //If vector has positive component, increase start
 
+    //Start 0,0,0
+    //End 5,5,5
+
+    Vector3d start, end;
+    setVector3d(&start, 0, 0, 0);
+    setVector3d(&end, FBUF_SZ-1, FBUF_SZ-1, FBUF_SZ-1);
+    //clearFrameBuffer_(framebuffer);
+    //drawBox(framebuffer, &start, &end, color);
+    //frameBufferToBits_DB_NEW(framebuffer);
+
+    for (int i=0; i<FBUF_SZ; i++)
+    {
+        clearFrameBuffer_(framebuffer);
+        drawBox(framebuffer, &start, &end, color);
+        frameBufferToBits_DB_NEW(framebuffer);
+        if (i == 0)
+            delay_ms(10*delay);
+        else
+            delay_ms(delay);
+
+        if (movement->x > 0)
+        {
+            start.x++;
+            if (start.x >= FBUF_SZ)
+                start.x = FBUF_SZ-1;
+        }
+        else if (movement->x < 0)
+        {
+            end.x--;
+            if (end.x < 0)
+                end.x = 0;
+        }
+
+        if (movement->y > 0)
+        {
+            start.y++;
+            if (start.y >= FBUF_SZ)
+                start.y = FBUF_SZ-1;
+        }
+        else if (movement->y < 0)
+        {
+            end.y--;
+            if (end.y < 0)
+                end.y = 0;
+        }
+
+        if (movement->z > 0)
+        {
+            start.z++;
+            if (start.z >= FBUF_SZ)
+                start.z = FBUF_SZ-1;
+        }
+        else if (movement->z < 0)
+        {
+            end.z--;
+            if (end.z < 0)
+                end.z = 0;
+
+        }
+    }
+
+    delay_ms(10*delay);
+
+    for (int i=0; i<FBUF_SZ-2; i++)
+    {
+        if (movement->x > 0)
+        {
+            start.x--;
+            if (start.x < 0)
+                start.x = 0;
+        }
+        else if (movement->x < 0)
+        {
+            end.x++;
+            if (end.x >= FBUF_SZ)
+                end.x = FBUF_SZ-1;
+        }
+
+        if (movement->y > 0)
+        {
+            start.y--;
+            if (start.y < 0)
+                start.y = 0;
+        }
+        else if (movement->y < 0)
+        {
+            end.y++;
+            if (end.y >= FBUF_SZ)
+                end.y = FBUF_SZ-1;
+        }
+
+        if (movement->z > 0)
+        {
+            start.z--;
+            if (start.z < 0)
+                start.z = 0;
+        }
+        else if (movement->z < 0)
+        {
+            end.z++;
+            if (end.z >= FBUF_SZ)
+                end.z = FBUF_SZ-1;
+        }
+
+        clearFrameBuffer_(framebuffer);
+        drawBox(framebuffer, &start, &end, color);
+        frameBufferToBits_DB_NEW(framebuffer);
+        delay_ms(delay);
+    }
+}
+void pointCloud_anm(FrameBuffer *framebuffer, uint8_t axis, uint8_t color, int delay)
+{
+    uint8_t destinations[FBUF_SZ][FBUF_SZ];
+    for (int i = 0; i<FBUF_SZ; i++)
+    {
+        for (int j=0; j<FBUF_SZ; j++)
+        {
+            destinations[i][j] = rand()%FBUF_SZ;
+        }
+    }
+
+    for (int k=0; k<FBUF_SZ; k++)
+    {
+        clearFrameBuffer_(framebuffer);
+        for (int i=0; i<FBUF_SZ; i++)
+        {
+            for (int j=0; j<FBUF_SZ; j++)
+            {
+                if (k <= destinations[i][j])
+                {
+                    setPixelColor(framebuffer, i, j, k, color);
+                }
+                else
+                {
+                    setPixelColor(framebuffer, i, j, destinations[i][j], color);
+                }
+            }
+        }
+        frameBufferToBits_DB_NEW(framebuffer);
+        if (k==0)
+            delay_ms(10*delay);
+        else
+            delay_ms(delay);
+    }
+    delay_ms(15*delay);
+    for (int k=FBUF_SZ-2; k>=1; k--)
+    {
+        clearFrameBuffer_(framebuffer);
+        for (int i=0; i<FBUF_SZ; i++)
+        {
+            for (int j=0; j<FBUF_SZ; j++)
+            {
+                if (k <= destinations[i][j])
+                {
+                    setPixelColor(framebuffer, i, j, k, color);
+                }
+                else
+                {
+                    setPixelColor(framebuffer, i, j, destinations[i][j], color);
+                }
+            }
+        }
+        frameBufferToBits_DB_NEW(framebuffer);
+        delay_ms(delay);
+    }
+}
 
 void controlPixel(FrameBuffer *framebuffer, int delay)
 {
@@ -1120,7 +1705,7 @@ void controlPixel(FrameBuffer *framebuffer, int delay)
     initButtonController(&controller);
     int x = 0, y = 0, z = 0;
     Snake snake;
-    initSnake(&snake, x, y, z);
+    initSnake(&snake, 10, x, y, z);
     while (1)
     {
         /*
@@ -1171,11 +1756,11 @@ void controlPixel(FrameBuffer *framebuffer, int delay)
         clearFrameBuffer_(framebuffer);
         setHead(&snake, x, y, z);
         drawSnake(framebuffer, &snake);
-        frameBufferToBits_DB(framebuffer);
+        frameBufferToBits_DB_NEW(framebuffer);
         delay_ms(delay);      
     }
 }
-void snakeGame(FrameBuffer *framebuffer, int delay)
+void snakeGame(FrameBuffer *framebuffer, uint8_t auto_play, int delay)
 {
     ButtonController controller;
     initButtonController(&controller);
@@ -1189,7 +1774,7 @@ void snakeGame(FrameBuffer *framebuffer, int delay)
 
     int x = 1, y = 1, z = 1;
     Snake snake;
-    initSnake(&snake, x, y, z);
+    initSnake(&snake, 5, x, y, z);
     //snakeInitTest(framebuffer, &snake);
 
     int loop = 1;
@@ -1236,6 +1821,9 @@ void snakeGame(FrameBuffer *framebuffer, int delay)
                 dir = 5;
             break;
         }
+        if (auto_play)
+            break;
+
 
         clearFrameBuffer_(framebuffer);
         setPixelColor(framebuffer, x, y, z, WHITE);
@@ -1251,6 +1839,8 @@ void snakeGame(FrameBuffer *framebuffer, int delay)
             states |= getButtonStates(&controller);
         }
 
+        if(!auto_play)
+        {
         if ((dir == 0)||(dir == 2))//Moving forward or backwards
         {
             if (states & (1 << controller.l_id))
@@ -1284,6 +1874,15 @@ void snakeGame(FrameBuffer *framebuffer, int delay)
                 dir = 0;
             if (states & (1 << controller.b_id))
                 dir = 2;
+        }
+        }
+        else
+        {
+            Vector3d head_loc;
+            setVector3d(&head_loc, x, y, z);
+            int temp_dir = getSnakeDirection(&head_loc, &dot, dir);
+            if (temp_dir >= 0)
+                dir = temp_dir;
         }
 
         switch (dir)
@@ -1359,7 +1958,11 @@ void snakeGame(FrameBuffer *framebuffer, int delay)
             }
             dot_color = (rand()%6)+1;
         }
-     
+        if (auto_play && score > 100)
+            break;    
+
+
+ 
         start = 0;
 
 
@@ -1385,9 +1988,175 @@ void snakeGame(FrameBuffer *framebuffer, int delay)
     }
     
     //Tally points
-    tallyScore_anm(framebuffer, score, 1, 50);
+    tallyScore_anm(framebuffer, score, 1, WHITE, 50);
 
     //delay_ms(1000);
+}
+int getSnakeDirection(Vector3d *head, Vector3d *dot, int direction)
+{
+    int diffX = dot->x - head->x;
+    int diffY = dot->y - head->y;
+    int diffZ = dot->z - head->z;
+
+    int magX = diffX;
+    if (magX < 0)
+        magX *= -1;
+
+    int magY = diffY;
+    if (magY < 0)
+        magY *= -1;
+
+    int magZ = diffZ;
+    if (magZ < 0)
+        magZ *= -1;
+
+
+    if (diffX == 0 && diffY == 0 && diffZ == 0)
+        return -1;//-1 Means no change in direction
+
+    switch(direction)
+    {
+        case BACK_DIR://Back(Away from you)
+        {
+            if (diffX >= 0)//If moving away from dot in X direction
+            {
+                if (magY >= magZ)
+                {
+                    if (diffY > 0)
+                        return RIGHT_DIR;
+                    else
+                        return LEFT_DIR;
+                }
+                else
+                {
+                    if (diffZ > 0)
+                        return UP_DIR;
+                    else
+                        return DOWN_DIR;
+                }
+            }
+            else
+                return -1;
+            break;
+        }
+        case LEFT_DIR://Left
+        {
+            if (diffY >= 0)//If moving away from dot in Y direction
+            {
+                if (magX >= magZ)
+                {
+                    if (diffX > 0)
+                        return FORWARD_DIR;
+                    else
+                        return BACK_DIR;
+                }
+                else
+                {
+                    if (diffZ > 0)
+                        return UP_DIR;
+                    else
+                        return DOWN_DIR;
+                }
+            }
+            else
+                return -1;
+            break;
+        }
+        case FORWARD_DIR://Forward(Towards you)
+        {
+            if (diffX <= 0)//If moving away from dot in X direction
+            {
+                if (magY >= magZ)
+                {
+                    if (diffY > 0)
+                        return RIGHT_DIR;
+                    else
+                        return LEFT_DIR;
+                }
+                else
+                {
+                    if (diffZ > 0)
+                        return UP_DIR;
+                    else
+                        return DOWN_DIR;
+                }
+            }
+            else
+                return -1;
+            break;
+        }
+        case RIGHT_DIR://Right
+        {
+            if (diffY <= 0)//If moving away from dot in Y direction
+            {
+                if (magX >= magZ)
+                {
+                    if (diffX > 0)
+                        return FORWARD_DIR;
+                    else
+                        return BACK_DIR;
+                }
+                else
+                {
+                    if (diffZ > 0)
+                        return UP_DIR;
+                    else
+                        return DOWN_DIR;
+                }
+            }
+            else
+                return -1;
+            break;
+        }
+        case UP_DIR://Up
+        {
+            if (diffZ <= 0)//If moving away from dot in Z direction
+            {
+                if (magX >= magY)
+                {
+                    if (diffX > 0)
+                        return FORWARD_DIR;
+                    else
+                        return BACK_DIR;
+                }
+                else
+                {
+                    if (diffY > 0)
+                        return RIGHT_DIR;
+                    else
+                        return LEFT_DIR;
+                }
+            }
+            else
+                return -1;
+            break;
+        }
+        case DOWN_DIR://Down
+        {
+            if (diffZ >= 0)//If moving away from dot in Z direction
+            {
+                if (magX >= magY)
+                {
+                    if (diffX > 0)
+                        return FORWARD_DIR;
+                    else
+                        return BACK_DIR;
+                }
+                else
+                {
+                    if (diffY > 0)
+                        return RIGHT_DIR;
+                    else
+                        return LEFT_DIR;
+                }
+            }
+            else
+                return -1;
+            break;
+        }
+    }
+    
+    return -1;
 }
 void tritrisGame(FrameBuffer *framebuffer, int delay)
 {
@@ -1591,55 +2360,55 @@ void tritrisGame(FrameBuffer *framebuffer, int delay)
         delay_ms(8*25);
     }
     //Tally points
-    tallyScore_anm(framebuffer, score, 1, 50);
+    tallyScore_anm(framebuffer, score, WHITE, 1, 50);
 }
 
 void powerTest(FrameBuffer *framebuffer, int delay)
 {
     //Driven fully
     setFrameBuffer(framebuffer);
-    frameBufferToBits_DB(framebuffer); 
+    frameBufferToBits_DB_NEW(framebuffer); 
     delay_ms(delay);
 
     //Fully off
     clearFrameBuffer_(framebuffer);
-    frameBufferToBits_DB(framebuffer);
+    frameBufferToBits_DB_NEW(framebuffer);
     delay_ms(delay);
 
     //Bottom half layers
     clearFrameBuffer_(framebuffer);
     for (int i=0; i<FBUF_SZ/2; i++)
-        drawPlane(framebuffer, XY_PLANE, i);
+        drawPlane(framebuffer, XY_PLANE, i, WHITE);
     //drawPlane(framebuffer, XY_PLANE, 0);
     //drawPlane(framebuffer, XY_PLANE, 1);
-    frameBufferToBits_DB(framebuffer);
+    frameBufferToBits_DB_NEW(framebuffer);
     delay_ms(delay);
 
     //Top half layers
     clearFrameBuffer_(framebuffer);
     for (int i=FBUF_SZ/2; i<FBUF_SZ; i++)
-         drawPlane(framebuffer, XY_PLANE, i);
+         drawPlane(framebuffer, XY_PLANE, i, WHITE);
     //drawPlane(framebuffer, XY_PLANE, 2);
     //drawPlane(framebuffer, XY_PLANE, 3);
-    frameBufferToBits_DB(framebuffer);
+    frameBufferToBits_DB_NEW(framebuffer);
     delay_ms(delay);
 
     //Left Half layers
     clearFrameBuffer_(framebuffer);
     for (int i=0; i<FBUF_SZ/2; i++)
-        drawPlane(framebuffer, XZ_PLANE, i);
+        drawPlane(framebuffer, XZ_PLANE, i, WHITE);
     //drawPlane(framebuffer, XZ_PLANE, 0);
     //drawPlane(framebuffer, XZ_PLANE, 1);
-    frameBufferToBits_DB(framebuffer);
+    frameBufferToBits_DB_NEW(framebuffer);
     delay_ms(delay);
 
     //Right half layers
     clearFrameBuffer_(framebuffer);
     for (int i=FBUF_SZ/2; i<FBUF_SZ; i++)
-        drawPlane(framebuffer, XZ_PLANE, i);
+        drawPlane(framebuffer, XZ_PLANE, i, WHITE);
     //drawPlane(framebuffer, XZ_PLANE, 2);
     //drawPlane(framebuffer, XZ_PLANE, 3);
-    frameBufferToBits_DB(framebuffer);
+    frameBufferToBits_DB_NEW(framebuffer);
     delay_ms(delay);
 }
 
@@ -1704,23 +2473,23 @@ void mainLoop(FrameBuffer *framebuffer, int delay)
             {
                 case 1:
                 {   
-                    shiftPlane_anm(framebuffer, sub_selection - 1, 1, delay);
+                    shiftPlane_anm(framebuffer, sub_selection - 1, WHITE, delay);
                     break;
                 }
                 case 2:
                 {
-                    rotatePlane_anm(framebuffer, sub_selection - 1, delay);
+                    rotatePlane_anm(framebuffer, sub_selection - 1, WHITE, delay);
                     break;
                 }
                 case 3:
                 {
-                    snake_anm(framebuffer, sub_selection, delay);
+                    snake_anm(framebuffer, sub_selection, WHITE, delay);
                     break;
                 }
                 case 4:
                 {
                     delay_ms(250);
-                    snakeGame(framebuffer, sub_selection*delay);
+                    snakeGame(framebuffer, 0, sub_selection*delay);
                     break;
                 }
                 case 5:
@@ -1742,10 +2511,10 @@ void mainLoop(FrameBuffer *framebuffer, int delay)
         clearFrameBuffer_(framebuffer);
         if (blink < 128)
         {
-            drawBinaryNumber(framebuffer, selection, 1, 2);
-            drawBinaryNumber(framebuffer, sub_selection, 1, 0);
+            drawBinaryNumber(framebuffer, selection, 1, 2, WHITE);
+            drawBinaryNumber(framebuffer, sub_selection, 1, 0, WHITE);
         }
-        frameBufferToBits_DB(framebuffer);
+        frameBufferToBits_DB_NEW(framebuffer);
 
 
         //Resolve new max selections 

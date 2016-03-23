@@ -1,6 +1,6 @@
 #pragma once
 #define BODY_LEN 20
-#define BODY_LEN_INIT 5
+#define BODY_LEN_INIT 4//5
 #include "FrameBuffer.h"
 #include "Vector3d.h"
 
@@ -20,8 +20,8 @@ typedef struct
 } Snake;
 
 
-Snake* makeSnake(uint8_t x, uint8_t y, uint8_t z);
-void initSnake(Snake *snake, uint8_t x, uint8_t y, uint8_t z);
+Snake* makeSnake(uint8_t init_len, uint8_t x, uint8_t y, uint8_t z);
+void initSnake(Snake *snake, uint8_t init_len, uint8_t x, uint8_t y, uint8_t z);
 void snakeInitTest(FrameBuffer *framebuffer, Snake *snake);
 
 void setHead(Snake *snake, uint8_t x, uint8_t y, uint8_t z);

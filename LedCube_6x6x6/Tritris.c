@@ -274,7 +274,7 @@ uint8_t checkTritrisArea(FrameBuffer* framebuffer, TritrisArea* gameArea)
             {
                 //if (levels_filled & (1 << k))
                 if (filled_levels[k])
-                    drawPlane(framebuffer, 2, k);
+                    drawPlane(framebuffer, 2, k, WHITE);
             }
             frameBufferToBits_DB_NEW(framebuffer);
             delay_ms(delay);

@@ -5,15 +5,15 @@
 #include "FrameBuffer.h"
 #include "delay.h"
 
-Snake* makeSnake(uint8_t x, uint8_t y, uint8_t z)
+Snake* makeSnake(uint8_t init_len, uint8_t x, uint8_t y, uint8_t z)
 {
     Snake *snake = (Snake*)malloc(sizeof(Snake));
-    initSnake(snake, x, y, z);
+    initSnake(snake, init_len, x, y, z);
     return snake;
 }
-void initSnake(Snake *snake, uint8_t x, uint8_t y, uint8_t z)
+void initSnake(Snake *snake, uint8_t init_len, uint8_t x, uint8_t y, uint8_t z)
 {
-    snake->body_len = BODY_LEN_INIT;
+    snake->body_len = init_len;
     //for (int i=0; i<BODY_LEN; i++)
     for (int i=0; i<snake->body_len; i++)
     {

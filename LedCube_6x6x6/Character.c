@@ -7,13 +7,19 @@
 
 uint8_t *getCharacterData(char c)
 {
+    if (c >= 65 && c <= 90)
+        return characters[c-65];
+    
+    if (c >= 48 && c <= 57)
+        return numbers[c-48];
+
+    return NULL;
+/*
     if (c < 65 || c > 90)
         return NULL;
 
-    //if (c - 65 != 0)
-    //    return NULL;
-
     return characters[c-65];
+*/
 }
 
 Character* makeCharacter(uint8_t x, uint8_t y, uint8_t z, uint8_t color, uint8_t *data_ptr)
@@ -116,52 +122,11 @@ Vector3d marqueePosToVector(uint8_t pos)//Store error code in z value
     }
     setVector3d(&vec, lookup_table[pos][0], lookup_table[pos][1], 0);
     return vec;
-
-
-/*
-    int marquee_idx = 0;
-    int x = 0, y = 0;
-    for (;x<5; x++, marquee_idx++)
-    {
-        if (marquee_idx == pos)
-        {
-            Vector3d vec;
-            setVector3d(&vec, x, y, 0);
-            return vec;
-        }
-    }
-    for (;y<5;y++, marquee_idx++)
-    {
-        if (marquee_idx == pos)
-        {
-            Vector3d vec;
-            setVector3d(&vec, x, y, 0);
-            return vec;
-        }    
-    }
-    for (;x>0; x--, marquee_idx++)
-    {
-        if (marquee_idx == pos)
-        {
-            Vector3d vec;
-            setVector3d(&vec, x, y, 0);
-            return vec;
-        }
-    }
-    for(;y>0; y--, marquee_idx++)
-    {
-        if (marquee_idx == pos)
-        {
-            Vector3d vec;
-            setVector3d(&vec, x, y, 0);
-            return vec;
-        }
-    }
-
-    Vector3d vec;
-    setVector3d(&vec, 0, 0, -1);
-    return vec;
-*/
+}
+int marqueeEndIdx(Marquee* marquee)
+{
+    int CHAR_SZ = 6;
+    return CHAR_SZ*marquee->text_size+(4*FBUF_SZ-4); 
 }
 void drawMarquee(FrameBuffer *framebuffer, Marquee *marquee)
 {
@@ -206,7 +171,8 @@ void drawMarquee_alt(FrameBuffer *framebuffer, Marquee *marquee)
             continue;
         for (int j=0; j<CHAR_SZ; j++)
         {
-            pos = -1*(i*(CHAR_SZ-1) + j) + marquee->offset - 1;
+            //pos = -1*(i*(CHAR_SZ-1) + j) + marquee->offset - 1;
+            pos = -1*(CHAR_SZ*i + j) +  marquee->offset - 1;//New calculation to fix spacing issue
             if (pos < 0)
                 return;
             if (pos < MARQUEE_AREA)

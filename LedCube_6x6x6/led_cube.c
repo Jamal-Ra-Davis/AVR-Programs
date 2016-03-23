@@ -16,7 +16,7 @@
 #include "Character.h"
 #include "RingBuffer.h"
 #include "USART.h"
-
+#include "MessageHandler.h"
 
 #define LEDS_DDR DDRC
 //#define GND_DDR DDRD
@@ -30,8 +30,10 @@
 
 //#define TIMER_DELAY 21 //45 Hz
 //#define TIMER_DELAY 16 //60 Hz, delay 60
-//#define TIMER_DELAY 80 //120 Hz, delay 30
-#define TIMER_DELAY 60
+//#define TIMER_DELAY 255 //120 Hz, delay 30
+
+
+#define TIMER_DELAY 60//60 for ~90Hz 80 for ~60
 
 #define DELAY_TIME 45
 
@@ -96,7 +98,7 @@ void initTimer()
     //TCCR0B |= ((1 << CS01) | (0 << CS00));// 1/8 clock speed
     //TCCR0B |= ((1 << CS02) | (0 << CS01) | (1 << CS00));// 1/1024
     //TCCR0B |= ((1 << CS01) | (1 << CS00));// 1/64 clock speed
-    TCCR0B |= ((1 << CS02) | (0 << CS01) | (0 << CS00));// 1/256 clock speed    
+    TCCR0B |= ((1 << CS02) | (0 << CS01) | (0 << CS00));// 1/256 clock speed    <<-- The one you want
 
     // turn on CTC mode:
     TCCR0A |= (1 << WGM01);
@@ -116,22 +118,8 @@ ISR(TIMER0_COMPA_vect)
 {
 //    GND_PORTS &= 0xF0;
     GND_EN_PORT |= (1 << GND_EN_PIN);
-
-
-
     //TCNT1 = 0;//--
-
-
-   
     sr_loadData_alt(&ledDriver, framebuffer.bufferBits[framebuffer.currLevel], 36);
-
-
-
-    
-
-    //timer_val = TCNT1;//--
-
-
 
 //    GND_PORTS |= 1 << framebuffer.currLevel;
 /*
@@ -140,7 +128,7 @@ ISR(TIMER0_COMPA_vect)
         framebuffer.currLevel = 0;
 */
     sr_incrementGround(&groundDriver, &framebuffer);
-    GND_EN_PORT &= ~(1 << GND_EN_PIN);    
+    GND_EN_PORT &= ~(1 << GND_EN_PIN);
 }
 
 int main(void) 
@@ -175,6 +163,9 @@ int main(void)
     //pushRingBuf(&ringbuffer, 2);
     //pushRingBuf(&ringbuffer, 3);
     //pushRingBuf(&ringbuffer, 4);
+
+
+
     _delay_ms(10000); 
     setFrameBufferColor(&framebuffer, 7);
     frameBufferToBits_DB_NEW(&framebuffer);    
@@ -228,11 +219,118 @@ int main(void)
     }
     SR_PORT &= ~(1 << PD4);
     SR_PORT |= (1 << PD4);
-*/  
+*/ 
+/* 
+    clearFrameBuffer_(&framebuffer);
+    for (int i=0; i<FBUF_SZ; i++)
+    {
+        drawPlane(&framebuffer, 2, i, 7);
+        clearPixel(&framebuffer, 0, 4, i);
+    }
+    frameBufferToBits_DB_NEW(&framebuffer);
+    cli();
+    while (1)
+    {
+        GND_EN_PORT |= (1 << GND_EN_PIN);
+        sr_loadData_alt(&ledDriver, framebuffer.bufferBits[framebuffer.currLevel], 36);
+        sr_incrementGround(&groundDriver, &framebuffer);
+        GND_EN_PORT &= ~(1 << GND_EN_PIN);
+        _delay_ms(15000);
+    }
+*/
+
+    while (0)
+    {
+/*
+        Vector3d start;
+        setVector3d(&start, 0, 0, 0);
+        Vector3d end;
+        for (end.z = 0; end.z<FBUF_SZ; end.z++)
+        {
+            for (end.x = 0; end.x < FBUF_SZ; end.x++)
+            {
+                for (end.y = 0; end.y < FBUF_SZ; end.y++)
+                {
+                    clearFrameBuffer_(&framebuffer);
+                    drawLine3d(&framebuffer, &start, &end, WHITE);
+                    frameBufferToBits_DB_NEW(&framebuffer);
+                    _delay_ms(250);
+                }
+            }
+        }
+*/
+/*
+        for (int i=0; i<FBUF_SZ; i++)
+        {
+            clearFrameBuffer_(&framebuffer);
+            drawLine2d(&framebuffer, 2, FBUF_SZ-1, 0, i, FBUF_SZ-1, FBUF_SZ-1-i, WHITE);
+            //setPixelColor(&framebuffer, 0, i, 0, RED);
+            frameBufferToBits_DB_NEW(&framebuffer);
+            _delay_ms(500);
+        }
+        for (int i=1; i<FBUF_SZ-1; i++)
+        {
+            clearFrameBuffer_(&framebuffer);
+            drawLine2d(&framebuffer, 2, FBUF_SZ-1, i, FBUF_SZ-1, FBUF_SZ-1-i, 0, WHITE);
+            //setPixelColor(&framebuffer, i, FBUF_SZ-1, 0, RED);
+            frameBufferToBits_DB_NEW(&framebuffer);
+            _delay_ms(500);
+        }
+*/
+        rotatePlane_anm(&framebuffer, rand()%2, RANDOM_COLOR, 250);
+
+    }
+
+
+    while (0)
+    { 
+/*
+        clearFrameBuffer_(&framebuffer);
+        drawPlane(&framebuffer, 2, 0, 7);
+        //setPixelColor(&framebuffer, 0, 4, 0, 2);
+        frameBufferToBits_DB_NEW(&framebuffer);
+        //clearFrameBuffer_(&framebuffer);
+        //drawPlane(&framebuffer, 2, 0, 4);
+        //frameBufferToBits_DB_NEW(&framebuffer); 
+*/ 
+       /*
+        clearFrameBuffer_(&framebuffer);
+        drawPlane(&framebuffer, 2, 0, 7);
+        frameBufferToBits_DB_NEW(&framebuffer);
+        _delay_ms(5000);
+        for (int i=0; i<FBUF_SZ; i++)
+        {
+            for (int j=0; j<FBUF_SZ; j++)
+            {
+                clearFrameBuffer_(&framebuffer);
+                drawPlane(&framebuffer, 2, 0, 7);
+                clearPixel(&framebuffer, i, j, 0);
+                frameBufferToBits_DB_NEW(&framebuffer);
+                _delay_ms(5000);
+            }
+        }
+        */
+        //_delay_ms(500);    
+       //drawPlane(&framebuffer, 2, 0, 4); 
+        Vector3d movement;
+        int x, y, z;
+        while(1)
+        {
+            x = rand()%3-1;
+            y = rand()%3-1;
+            z = rand()%3-1;
+            if (!(x == 0 && y == 0 && z == 0))
+                break;
+        }
+        setVector3d(&movement, x, y, z);
+        boxExpand_anm(&framebuffer, &movement, rand()%7+1, 100); 
+        //snake_anm(&framebuffer, 50, rand()%7+1, 500); 
+    }
+
 
 
     //Testing serial stuff, remember to get rid of
-    char serialWords[64] = "DEFAULT TEXT";
+    char serialWords[64] = "TESTING TESTING 1234 567 89";//"DEFAULT TEXT IS COOL";
     while(1)
     {
         int serialCnt = 0;
@@ -261,69 +359,162 @@ int main(void)
         }
         if (buffer_used)
             serialWords[serialCnt] = '\0';
- 
-        //if (strlen(serialWords))
-        //{
-            Marquee serialMarquee;
 
-            initMarquee(&serialMarquee, 0, serialWords, WHITE);
-            for (serialMarquee.offset = 0; serialMarquee.offset < 6* serialMarquee.text_size+20; serialMarquee.offset++)
+
+        int anm_num = 9;
+        int rand_anm = rand()%anm_num;
+        int rand_loops;
+        int rand_delay;
+        switch (rand_anm)
+        {
+            case 0:
             {
-                clearFrameBuffer_(&framebuffer);
-                drawMarquee_alt(&framebuffer, &serialMarquee);
-                frameBufferToBits_DB_NEW(&framebuffer);
-                _delay_ms(500);
+                rand_loops = rand()%5+1;
+                for (int l=0; l<rand_loops; l++)
+                {
+                    Marquee serialMarquee;
+
+                    initMarquee(&serialMarquee, 0, serialWords, WHITE);
+                    for (int i=0; i<serialMarquee.text_size; i++)
+                    {
+                        serialMarquee.text[i].color = RANDOM_COLOR;
+                    }
+                    for (serialMarquee.offset = 0; serialMarquee.offset < marqueeEndIdx(&serialMarquee); serialMarquee.offset++)
+                    {
+                        clearFrameBuffer_(&framebuffer);
+                        drawMarquee_alt(&framebuffer, &serialMarquee);
+                        frameBufferToBits_DB_NEW(&framebuffer);
+                        _delay_ms(500);
+                    }
+                }
+                break;
             }
-        //}
+            case 1:
+            {
+                rand_loops = rand()%15+15;
+                rand_delay = (rand()%4+1)*100;
+                for (int l=0; l<rand_loops; l++)
+                {
+                    shiftPlane_anm(&framebuffer, rand()%3, RANDOM_COLOR, rand_delay);
+                }
+                break;
+            }
+            case 2:
+            {   
+                rand_loops = rand()%15+15;
+                rand_delay = (rand()%4+1)*100;
+                for (int l=0; l<rand_loops; l++)
+                {
+                    rotatePlane_anm(&framebuffer, rand()%3, RANDOM_COLOR, rand_delay);
+                }
+                break;
+            }
+            case 3:
+            {
+                rand_loops = (rand()%4+1)*50;
+                rand_delay = (rand()%4+1)*100;
+                snake_anm(&framebuffer, rand_loops, RANDOM_COLOR, rand_delay);
+                break;
+            }
+            case 4:
+            {
+                rand_loops = rand()%40+25;
+                rand_delay = (rand()%4+2)*100;
+                for (int l=0; l<rand_loops; l++)
+                {
+                    setFrameBufferRandom(&framebuffer);
+                    frameBufferToBits_DB_NEW(&framebuffer);
+                    delay_ms(rand_delay);
+                    //ballBounce_anm(&framebuffer, rand_delay);
+                }
+                break;
+            }
+            case 5:
+            {
+                rand_loops = rand()%50+10;
+                rand_delay = (rand()%10+8)*10;
+                for (int l=0; l<rand_loops; l++)
+                {
+                    Vector3d movement;
+                    int x, y, z;
+                    while(1)    
+                    {
+                        x = rand()%3-1;
+                        y = rand()%3-1;
+                        z = rand()%3-1;
+                        if (!(x == 0 && y == 0 && z == 0))
+                            break;
+                    }
+                    setVector3d(&movement, x, y, z);
+                    boxExpand_anm(&framebuffer, &movement, RANDOM_COLOR, rand_delay);//100 as delay value, don't stray too far
+                }
+                break;
+            }
+            case 6:
+            {
+                rand_loops = rand()%40+25;
+                rand_delay = (rand()%4+2)*100;
+                for (int l=0; l<rand_loops; l++)
+                {
+                    clearFrameBuffer_(&framebuffer);
+                    for (int i=0; i<rand()%10+5; i++)
+                    {
+                        setPixelColor(&framebuffer, rand()%FBUF_SZ, rand()%FBUF_SZ, rand()%FBUF_SZ, RANDOM_COLOR);
+                    }
+                    frameBufferToBits_DB_NEW(&framebuffer);
+                    delay_ms(rand_delay);
+                    //ballBounce_anm(&framebuffer, rand_delay);
+                }
+                break;
+            }
+            case 7:
+            {       
+                rand_loops = rand()%15+15;
+                rand_delay = (rand()%10+8)*20;
+                uint8_t color_ = RANDOM_COLOR;
+                for (int l=0; l<rand_loops; l++)
+                {
+                    pointCloud_anm(&framebuffer, 0, RANDOM_COLOR, rand_delay);
+                }
+                break;
+            }
+            case 8:
+            {
+                rand_delay = (rand()%11)*100 + 250;
+                snakeGame(&framebuffer, 1, rand_delay);
+                break;
+            }
+        }
     }
-    
-    while(1)
+
+
+   
+    clearFrameBuffer_(&framebuffer); 
+    frameBufferToBits_DB_NEW(&framebuffer); 
+    MessageHandler messageHandler;
+    initMessageHandler(&messageHandler, &ringbuffer);
+
+    while(0)
     {
-        uint8_t mode = 'Q';
-        uint8_t anm_mode = 0;
+        //clearFrameBuffer_(&framebuffer);        
+        //frameBufferToBits_DB_NEW(&framebuffer);
+
+        //uint8_t mode = 'Q';
+        //uint8_t anm_mode = 0;
         while (!ringbuffer.isEmpty)
         {
+            /*
+            setFrameBufferColor(&framebuffer, WHITE);
+            frameBufferToBits_DB_NEW(&framebuffer);
+            _delay_ms(500);        
+            */
             uint8_t valid_message = 1;
             switch(popRingBuf(&ringbuffer))
             {
                 case 'A':
                 {
-                    char anm_type = popRingBuf(&ringbuffer);
-                    if (anm_type == 'S' || anm_type == 'R')
-                    {
-                        uint8_t anm_code = popRingBuf(&ringbuffer);
-                        switch(anm_code)
-                        {
-                            case 0:
-                            {
-                                uint8_t color = popRingBuf(&ringbuffer);
-                                uint8_t axis = popRingBuf(&ringbuffer);
-                                int delay = popRingBuf(&ringbuffer);
-                                if (anm_type == 'S')
-                                {
-                                    shiftPlane_anm(&framebuffer, axis, color, delay);
-                                }
-                                else
-                                {
-                                    anm_mode = anm_code;
-                                }
-                                break;
-                            }
-                            case 1:
-                            {
-                                break;
-                            }
-                            default:
-                            {
-                                valid_message = 0;
-                                break;
-                            }
-                        }
-                    }
-                    else
-                    {
+                    if (handleAnimationMessage(&messageHandler, &framebuffer))
                         valid_message = 0;
-                    }
                     break;
                 }
                 case 'C':
@@ -332,6 +523,13 @@ int main(void)
                 }
                 case 'D':
                 {
+                    //setFrameBufferColor(&framebuffer, RED);
+                    //frameBufferToBits_DB_NEW(&framebuffer);
+                    //_delay_ms(500);
+                    if (handleDrawingMessage(&messageHandler, &framebuffer))
+                        valid_message = 0;
+                    //clearFrameBuffer_(&framebuffer);        
+                    //frameBufferToBits_DB_NEW(&framebuffer);
                     break;
                 }
                 case 'M':
@@ -352,14 +550,48 @@ int main(void)
             if (!valid_message)
             {
                 while(!ringbuffer.isEmpty)
-                    popRingBuf(&ringbuffer);
+                    popRingBuf(&ringbuffer);                
             }
         }
 
 
-        switch (mode)
+        switch (messageHandler.mode)
         {
-
+            case 'A':
+            {
+                switch(messageHandler.anm_mode)
+                {
+                    case 0:
+                    {
+                        shiftPlane_anm(&framebuffer, messageHandler.axis, messageHandler.color, 10*messageHandler.delay);
+                        break;
+                    }
+                }
+                break;
+            }
+            case 'C':
+            {
+                break;
+            }
+            case 'D':
+            {
+                _delay_ms(500);
+                break;
+            }
+            case 'M':
+            {
+                break;
+            }
+            /*
+            case 'Q':
+            {
+                break;
+            }
+            */
+            default://Marquee is default
+            {
+                break;
+            }
         }
 
 
