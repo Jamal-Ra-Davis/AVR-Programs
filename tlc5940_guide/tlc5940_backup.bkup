@@ -1,0 +1,219 @@
+#include <avr/power.h>
+#include <avr/io.h>
+#include <stdint.h>
+#include <util/delay.h>
+
+#define GSCLK_DDR DDRB
+#define GSCLK_PORT PORTB
+#define GSCLK_PIN PB0
+
+#define SIN_DDR DDRB
+#define SIN_PORT PORTB
+#define SIN_PIN PB3
+
+#define SCLK_DDR DDRB
+#define SCLK_PORT PORTB
+#define SCLK_PIN PB5
+
+#define BLANK_DDR DDRB
+#define BLANK_PORT PORTB
+#define BLANK_PIN PB2
+
+#define DCPRG_DDR DDRD
+#define DCPRG_PORT PORTD
+#define DCPRG_PIN PD4
+
+#define VPRG_DDR DDRD
+#define VPRG_PORT PORTD
+#define VPRG_PIN PD7
+
+#define XLAT_DDR DDRB
+#define XLAT_PORT PORTB
+#define XLAT_PIN PB1
+
+#define pulse(port, pin) do {\
+                                port |= (1 << pin);\
+                                port &= ~(1 << pin);\
+                        } while (0)
+
+
+#define TLC5940_N 1
+
+
+uint8_t dcData[96*TLC5940_N] = {
+    0, 0, 0, 0, 1, 1,   //Ch 15
+    0, 0, 0, 0, 1, 1,   //Ch 14
+    0, 0, 0, 0, 1, 1,   //Ch 13
+    0, 0, 0, 0, 1, 1,   //Ch 12
+    0, 0, 0, 0, 1, 1,   //Ch 11
+    0, 0, 0, 0, 1, 1,   //Ch 10
+    0, 0, 0, 0, 1, 1,   //Ch 9
+    0, 0, 0, 0, 1, 1,   //Ch 8
+    0, 0, 0, 0, 1, 1,   //Ch 7
+    0, 0, 0, 0, 1, 1,   //Ch 6
+    0, 0, 0, 0, 1, 1,   //Ch 5
+    0, 0, 0, 0, 1, 1,   //Ch 4
+    0, 0, 0, 0, 1, 1,   //Ch 3
+    0, 0, 0, 0, 1, 1,   //Ch 2
+    0, 0, 0, 0, 1, 1,   //Ch 1
+    0, 0, 0, 0, 1, 1    //Ch 0
+};
+
+uint8_t gsData[192*TLC5940_N] = {
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,     //Ch 15
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,     //Ch 14
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,     //Ch 13
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,     //Ch 12
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,     //Ch 11
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,     //Ch 10
+    0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,     //Ch 9 
+    1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,     //Ch 8
+    0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,     //Ch 7
+    1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,     //Ch 6
+    0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,     //Ch 5
+    1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,     //Ch 4
+    0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,     //Ch 3
+    0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,     //Ch 2
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,     //Ch 1
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1      //Ch 0
+};
+
+void resetGSData()
+{
+    for (int i=0; i<192*TLC5940_N; i++)
+        gsData[i] = 0;
+}
+void setGSData()
+{
+    for (int i=0; i<192*TLC5940_N; i++)
+        gsData[i] = 1;
+}
+
+
+void TLC5940_Init()
+{
+    GSCLK_DDR |= (1 << GSCLK_PIN);
+    SCLK_DDR |= (1 << SCLK_PIN);
+    DCPRG_DDR |= (1 << DCPRG_PIN);
+    VPRG_DDR |= (1 << VPRG_PIN);
+    XLAT_DDR |= (1 << XLAT_PIN);
+    BLANK_DDR |= (1 << BLANK_PIN);    
+    SIN_DDR |= (1 << SIN_PIN);
+
+//    SCLK_DDR |= (1 << SCLK_PIN);
+//    BLANK_DDR |= (1 << BLANK_PIN);
+//    DCPRG_DDR |= (1 << DCPRG_PIN);
+//    VPRG_DDR |= (1 << VPRG_PIN);
+//    XLAT_DDR |= (1 << XLAT_PIN);
+
+    GSCLK_PORT &= ~(1 << GSCLK_PIN);
+    SCLK_PORT &= ~(1 << SCLK_PIN);  
+    DCPRG_PORT &= ~(1 << DCPRG_PIN);
+    VPRG_PORT |= (1 << VPRG_PIN); 
+    XLAT_PORT &= ~(1 << XLAT_PIN);
+    BLANK_PORT |= (1 << BLANK_PIN);
+}
+
+void TLC5940_ClockInDC()
+{
+    DCPRG_PORT |= (1 << DCPRG_PIN);
+    VPRG_PORT |= (1 << VPRG_PIN);
+
+    uint8_t counter = 0;
+    while(1)
+    {
+        if (counter > TLC5940_N*96 - 1)
+        {
+            pulse(XLAT_PORT, XLAT_PIN);
+            break;
+        }
+        else
+        {
+            if (dcData[counter])
+                SIN_PORT |= (1 << SIN_PIN);
+            else
+                SIN_PORT &= ~(1 << SIN_PIN);
+
+            pulse(SCLK_PORT, SCLK_PIN);
+            counter++;
+        }
+    }
+}
+
+void TLC5940_SetGS_And_GS_PWM()
+{
+    uint8_t firstCycleFlag = 0;
+    if (VPRG_PORT & (1 << VPRG_PIN))
+    {
+        VPRG_PORT &= ~(1 << VPRG_PIN);
+        firstCycleFlag = 1;
+    }
+
+    uint16_t GSCLK_Counter = 0;
+    uint8_t Data_Counter = 0;
+    
+    BLANK_PORT &= ~(1 << BLANK_PIN);
+
+    while (1)
+    {
+        if (GSCLK_Counter > 4095)
+        {
+            BLANK_PORT |= (1 << BLANK_PIN);
+            pulse(XLAT_PORT, XLAT_PIN);
+            if (firstCycleFlag)
+                pulse(SCLK_PORT, SCLK_PIN);
+            firstCycleFlag = 0;
+            break;
+        }
+        else
+        {
+            if (!(Data_Counter > 192*TLC5940_N - 1))
+            {
+                if (gsData[Data_Counter])
+                    SIN_PORT |= (1 << SIN_PIN);
+                else
+                    SIN_PORT &= ~(1 << SIN_PIN);
+
+                pulse(SCLK_PORT, SCLK_PIN);
+                Data_Counter++;
+            }
+            pulse(GSCLK_PORT, GSCLK_PIN);
+            GSCLK_Counter++;
+        }
+    }
+}
+
+int main(void) 
+{
+/*
+    //Run at 8 MHz
+    clock_prescale_set(clock_div_1);
+
+    //-----------INITS------------//
+    TLC5940_Init();
+    TLC5940_ClockInDC();
+    
+*/
+
+    //-------EVENT LOOP-----------//
+    while(1) 
+    {
+/*
+        resetGSData();
+        
+        for (int i = 192*TLC5940_N-1; i>=0; i--)
+        {
+            TLC5940_SetGS_And_GS_PWM();        
+            gsData[i] = 1;
+            _delay_ms(50);
+        }
+        for (int i=0; i<500; i++)
+        {
+            TLC5940_SetGS_And_GS_PWM();
+            _delay_ms(5);
+        }
+*/
+    }
+    return(0);
+
+}
