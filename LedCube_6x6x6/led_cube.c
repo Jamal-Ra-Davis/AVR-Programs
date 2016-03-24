@@ -363,8 +363,8 @@ int main(void)
 
 
         int anm_num = 9;
-        //int rand_anm = rand()%anm_num;
-        int rand_anm = 0;
+        int rand_anm = rand()%anm_num;
+        //int rand_anm = 0;
         int rand_loops;
         int rand_delay;
         switch (rand_anm)
