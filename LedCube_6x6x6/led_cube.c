@@ -330,7 +330,7 @@ int main(void)
 
 
     //Testing serial stuff, remember to get rid of
-    char serialWords[97] = "TESTING TESTING 1234 567 89";//"DEFAULT TEXT IS COOL";
+    char serialWords[65] = "TESTING TESTING 1234 567 89";//"DEFAULT TEXT IS COOL";
     //char serialWords[129] = "TEST MESSAGE THAT NEEDS TO BE 128 CHARACTERS LONG  THE OTHER MESSAGE WASNT LONG ENOUGH SO I AM ADDING TO IT 123456789 12345 1234";
     while(1)
     {

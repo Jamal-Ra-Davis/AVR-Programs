@@ -2,7 +2,7 @@
 #include "Vector3d.h"
 #include "FrameBuffer.h"
 
-#define MARQUEE_MAX 96//64
+#define MARQUEE_MAX 64//64
 /*
 static uint8_t characters[26][FBUF_SZ] = 
     {

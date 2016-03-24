@@ -1,7 +1,7 @@
 #pragma once
 #include <avr/io.h>
 
-#define RING_BUFSZ 96//64
+#define RING_BUFSZ 64//64
 
 typedef struct {
     uint8_t cnt;
