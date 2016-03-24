@@ -36,7 +36,7 @@ groundDriver        0x3               led_cube.o
 __brkval            0x2               /usr/lib/gcc/avr/4.7.2/../../../avr/lib/avr5/libc.a(malloc.o)
 buttonController    0x2a              led_cube.o
 framebuffer         0x134             led_cube.o
-ringbuffer          0x46              led_cube.o
+ringbuffer          0x66              led_cube.o
 timer_val           0x2               led_cube.o
 ledDriver           0x5               led_cube.o
 __flp               0x2               /usr/lib/gcc/avr/4.7.2/../../../avr/lib/avr5/libc.a(malloc.o)
@@ -48,6 +48,10 @@ Discarded input sections
  .text          0x0000000000000000        0x0 ButtonController.o
  .data          0x0000000000000000        0x0 ButtonController.o
  .bss           0x0000000000000000        0x0 ButtonController.o
+ .text.buttonPressed
+                0x0000000000000000       0x9e ButtonController.o
+ .text.getButtonStates
+                0x0000000000000000       0xc8 ButtonController.o
  .text.buttonPressedDebounce
                 0x0000000000000000      0x166 ButtonController.o
  .text          0x0000000000000000        0x0 Character.o
@@ -70,6 +74,8 @@ Discarded input sections
  .text          0x0000000000000000        0x0 delay.o
  .data          0x0000000000000000        0x0 delay.o
  .bss           0x0000000000000000        0x0 delay.o
+ .text.delay_ms
+                0x0000000000000000       0x16 delay.o
  .text.timer_delay_ms
                 0x0000000000000000       0x22 delay.o
  .text.delay_us
@@ -81,6 +87,8 @@ Discarded input sections
                 0x0000000000000000       0x1e FrameBuffer.o
  .text.clearFrameBuffer
                 0x0000000000000000       0xdc FrameBuffer.o
+ .text.setFrameBufferRandom
+                0x0000000000000000       0xb6 FrameBuffer.o
  .text.setPixel
                 0x0000000000000000       0x30 FrameBuffer.o
  .text.clearPixel
@@ -91,16 +99,37 @@ Discarded input sections
                 0x0000000000000000       0x2e FrameBuffer.o
  .text.drawLine
                 0x0000000000000000       0xa4 FrameBuffer.o
+ .text.drawLine2d
+                0x0000000000000000      0x1ec FrameBuffer.o
  .text.drawLine3d
                 0x0000000000000000      0x3d6 FrameBuffer.o
+ .text.drawPlane
+                0x0000000000000000       0xea FrameBuffer.o
+ .text.drawBox  0x0000000000000000      0x162 FrameBuffer.o
  .text.drawBinaryNumber
                 0x0000000000000000      0x120 FrameBuffer.o
+ .text.shiftPlane_anm
+                0x0000000000000000      0x28e FrameBuffer.o
+ .text.rotatePlane_anm
+                0x0000000000000000      0x122 FrameBuffer.o
+ .text.snake_anm
+                0x0000000000000000      0x1fc FrameBuffer.o
+ .text.tallyScore_anm
+                0x0000000000000000      0x142 FrameBuffer.o
  .text.sinWave_anm
                 0x0000000000000000       0x40 FrameBuffer.o
  .text.ballBounce_anm
                 0x0000000000000000      0x166 FrameBuffer.o
+ .text.boxExpand_anm
+                0x0000000000000000      0x27e FrameBuffer.o
+ .text.pointCloud_anm
+                0x0000000000000000      0x1c0 FrameBuffer.o
  .text.controlPixel
                 0x0000000000000000      0x12c FrameBuffer.o
+ .text.getSnakeDirection
+                0x0000000000000000      0x116 FrameBuffer.o
+ .text.snakeGame
+                0x0000000000000000      0x70a FrameBuffer.o
  .text.tritrisGame
                 0x0000000000000000      0x934 FrameBuffer.o
  .text.powerTest
@@ -156,10 +185,21 @@ Discarded input sections
  .text          0x0000000000000000        0x0 Snake.o
  .data          0x0000000000000000        0x0 Snake.o
  .bss           0x0000000000000000        0x0 Snake.o
+ .text.initSnake
+                0x0000000000000000       0x84 Snake.o
  .text.makeSnake
                 0x0000000000000000       0x46 Snake.o
  .text.snakeInitTest
                 0x0000000000000000       0x48 Snake.o
+ .text.setHead  0x0000000000000000       0x9c Snake.o
+ .text.drawSnake
+                0x0000000000000000       0x6e Snake.o
+ .text.snakeCrossesBody
+                0x0000000000000000       0x60 Snake.o
+ .text.pointOverlapsSnake
+                0x0000000000000000       0x86 Snake.o
+ .text.incrementSnake
+                0x0000000000000000       0x50 Snake.o
  .text          0x0000000000000000        0x0 Tritris.o
  .data          0x0000000000000000        0x0 Tritris.o
  .bss           0x0000000000000000        0x0 Tritris.o
@@ -513,7 +553,7 @@ LOAD /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a
 .rela.plt
  *(.rela.plt)
 
-.text           0x0000000000000000     0x35c8
+.text           0x0000000000000000     0x1526
  *(.vectors)
  .vectors       0x0000000000000000       0x68 /usr/lib/gcc/avr/4.7.2/../../../avr/lib/avr5/crtm328p.o
                 0x0000000000000000                __vectors
@@ -598,187 +638,126 @@ LOAD /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a
  .text.initButtonController
                 0x00000000000000a6      0x166 ButtonController.o
                 0x00000000000000a6                initButtonController
- .text.buttonPressed
-                0x000000000000020c       0x9e ButtonController.o
-                0x000000000000020c                buttonPressed
- .text.getButtonStates
-                0x00000000000002aa       0xc8 ButtonController.o
-                0x00000000000002aa                getButtonStates
  .text.getCharacterData
-                0x0000000000000372       0x46 Character.o
-                0x0000000000000372                getCharacterData
+                0x000000000000020c       0x46 Character.o
+                0x000000000000020c                getCharacterData
  .text.setCharacterPosition
-                0x00000000000003b8        0xc Character.o
-                0x00000000000003b8                setCharacterPosition
+                0x0000000000000252        0xc Character.o
+                0x0000000000000252                setCharacterPosition
  .text.initMarquee
-                0x00000000000003c4       0xd4 Character.o
-                0x00000000000003c4                initMarquee
+                0x000000000000025e       0xd4 Character.o
+                0x000000000000025e                initMarquee
  .text.marqueePosToVector
-                0x0000000000000498       0xa6 Character.o
-                0x0000000000000498                marqueePosToVector
+                0x0000000000000332       0xa6 Character.o
+                0x0000000000000332                marqueePosToVector
  .text.marqueeEndIdx
-                0x000000000000053e       0x18 Character.o
-                0x000000000000053e                marqueeEndIdx
+                0x00000000000003d8       0x18 Character.o
+                0x00000000000003d8                marqueeEndIdx
  .text.drawMarquee_alt
-                0x0000000000000556      0x19c Character.o
-                0x0000000000000556                drawMarquee_alt
- .text.delay_ms
-                0x00000000000006f2       0x16 delay.o
-                0x00000000000006f2                delay_ms
+                0x00000000000003f0      0x19c Character.o
+                0x00000000000003f0                drawMarquee_alt
  .text.initFrameBuffer
-                0x0000000000000708       0xe8 FrameBuffer.o
-                0x0000000000000708                initFrameBuffer
+                0x000000000000058c       0xe8 FrameBuffer.o
+                0x000000000000058c                initFrameBuffer
  .text.colorToBits
-                0x00000000000007f0       0x40 FrameBuffer.o
-                0x00000000000007f0                colorToBits
+                0x0000000000000674       0x40 FrameBuffer.o
+                0x0000000000000674                colorToBits
  .text.frameBufferToBits_DB_NEW
-                0x0000000000000830      0x3f2 FrameBuffer.o
-                0x0000000000000830                frameBufferToBits_DB_NEW
+                0x00000000000006b4      0x3f2 FrameBuffer.o
+                0x00000000000006b4                frameBufferToBits_DB_NEW
  .text.clearFrameBuffer_
-                0x0000000000000c22       0x56 FrameBuffer.o
-                0x0000000000000c22                clearFrameBuffer_
+                0x0000000000000aa6       0x56 FrameBuffer.o
+                0x0000000000000aa6                clearFrameBuffer_
  .text.setFrameBuffer
-                0x0000000000000c78       0x6e FrameBuffer.o
-                0x0000000000000c78                setFrameBuffer
+                0x0000000000000afc       0x6e FrameBuffer.o
+                0x0000000000000afc                setFrameBuffer
  .text.setFrameBufferColor
-                0x0000000000000ce6       0x70 FrameBuffer.o
-                0x0000000000000ce6                setFrameBufferColor
- .text.setFrameBufferRandom
-                0x0000000000000d56       0xb6 FrameBuffer.o
-                0x0000000000000d56                setFrameBufferRandom
+                0x0000000000000b6a       0x70 FrameBuffer.o
+                0x0000000000000b6a                setFrameBufferColor
  .text.setPixelColor
-                0x0000000000000e0c       0x32 FrameBuffer.o
-                0x0000000000000e0c                setPixelColor
- .text.drawLine2d
-                0x0000000000000e3e      0x1ec FrameBuffer.o
-                0x0000000000000e3e                drawLine2d
- .text.drawPlane
-                0x000000000000102a       0xea FrameBuffer.o
-                0x000000000000102a                drawPlane
- .text.drawBox  0x0000000000001114      0x162 FrameBuffer.o
-                0x0000000000001114                drawBox
- .text.shiftPlane_anm
-                0x0000000000001276      0x28e FrameBuffer.o
-                0x0000000000001276                shiftPlane_anm
- .text.rotatePlane_anm
-                0x0000000000001504      0x122 FrameBuffer.o
-                0x0000000000001504                rotatePlane_anm
- .text.snake_anm
-                0x0000000000001626      0x1fc FrameBuffer.o
-                0x0000000000001626                snake_anm
- .text.tallyScore_anm
-                0x0000000000001822      0x142 FrameBuffer.o
-                0x0000000000001822                tallyScore_anm
- .text.boxExpand_anm
-                0x0000000000001964      0x27e FrameBuffer.o
-                0x0000000000001964                boxExpand_anm
- .text.pointCloud_anm
-                0x0000000000001be2      0x1c0 FrameBuffer.o
-                0x0000000000001be2                pointCloud_anm
- .text.getSnakeDirection
-                0x0000000000001da2      0x116 FrameBuffer.o
-                0x0000000000001da2                getSnakeDirection
- .text.snakeGame
-                0x0000000000001eb8      0x70a FrameBuffer.o
-                0x0000000000001eb8                snakeGame
+                0x0000000000000bda       0x32 FrameBuffer.o
+                0x0000000000000bda                setPixelColor
  .text.USARTInit
-                0x00000000000025c2       0x18 led_cube.o
-                0x00000000000025c2                USARTInit
+                0x0000000000000c0c       0x18 led_cube.o
+                0x0000000000000c0c                USARTInit
  .text.__vector_18
-                0x00000000000025da       0x68 led_cube.o
-                0x00000000000025da                __vector_18
+                0x0000000000000c24       0x68 led_cube.o
+                0x0000000000000c24                __vector_18
  .text.initTimer
-                0x0000000000002642       0x2c led_cube.o
-                0x0000000000002642                initTimer
+                0x0000000000000c8c       0x2c led_cube.o
+                0x0000000000000c8c                initTimer
  .text.__vector_14
-                0x000000000000266e       0x70 led_cube.o
-                0x000000000000266e                __vector_14
+                0x0000000000000cb8       0x70 led_cube.o
+                0x0000000000000cb8                __vector_14
  .text.startup.main
-                0x00000000000026de      0x60e led_cube.o
-                0x00000000000026de                main
+                0x0000000000000d28      0x1e6 led_cube.o
+                0x0000000000000d28                main
  .text.setLedDriver
-                0x0000000000002cec       0x16 LedDriver.o
-                0x0000000000002cec                setLedDriver
+                0x0000000000000f0e       0x16 LedDriver.o
+                0x0000000000000f0e                setLedDriver
  .text.enableGroundDriver
-                0x0000000000002d02       0x72 LedDriver.o
-                0x0000000000002d02                enableGroundDriver
+                0x0000000000000f24       0x72 LedDriver.o
+                0x0000000000000f24                enableGroundDriver
  .text.setGroundDriver
-                0x0000000000002d74        0xc LedDriver.o
-                0x0000000000002d74                setGroundDriver
+                0x0000000000000f96        0xc LedDriver.o
+                0x0000000000000f96                setGroundDriver
  .text.sr_loadData_alt
-                0x0000000000002d80      0x178 LedDriver.o
-                0x0000000000002d80                sr_loadData_alt
+                0x0000000000000fa2      0x178 LedDriver.o
+                0x0000000000000fa2                sr_loadData_alt
  .text.initGroundRegister
-                0x0000000000002ef8       0x80 LedDriver.o
-                0x0000000000002ef8                initGroundRegister
+                0x000000000000111a       0x80 LedDriver.o
+                0x000000000000111a                initGroundRegister
  .text.sr_incrementGround
-                0x0000000000002f78       0xa2 LedDriver.o
-                0x0000000000002f78                sr_incrementGround
+                0x000000000000119a       0xa2 LedDriver.o
+                0x000000000000119a                sr_incrementGround
  .text.initRingBuf
-                0x000000000000301a       0x22 RingBuffer.o
-                0x000000000000301a                initRingBuf
+                0x000000000000123c       0x22 RingBuffer.o
+                0x000000000000123c                initRingBuf
  .text.pushRingBuf
-                0x000000000000303c       0x6c RingBuffer.o
-                0x000000000000303c                pushRingBuf
+                0x000000000000125e       0x6c RingBuffer.o
+                0x000000000000125e                pushRingBuf
  .text.popRingBuf
-                0x00000000000030a8       0x6e RingBuffer.o
-                0x00000000000030a8                popRingBuf
- .text.initSnake
-                0x0000000000003116       0x84 Snake.o
-                0x0000000000003116                initSnake
- .text.setHead  0x000000000000319a       0x9c Snake.o
-                0x000000000000319a                setHead
- .text.drawSnake
-                0x0000000000003236       0x6e Snake.o
-                0x0000000000003236                drawSnake
- .text.snakeCrossesBody
-                0x00000000000032a4       0x60 Snake.o
-                0x00000000000032a4                snakeCrossesBody
- .text.pointOverlapsSnake
-                0x0000000000003304       0x86 Snake.o
-                0x0000000000003304                pointOverlapsSnake
- .text.incrementSnake
-                0x000000000000338a       0x50 Snake.o
-                0x000000000000338a                incrementSnake
+                0x00000000000012ca       0x6e RingBuffer.o
+                0x00000000000012ca                popRingBuf
  .text.setVector3d
-                0x00000000000033da       0x10 Vector3d.o
-                0x00000000000033da                setVector3d
+                0x0000000000001338       0x10 Vector3d.o
+                0x0000000000001338                setVector3d
  .text.receiveByte
-                0x00000000000033ea        0xe ../AVR-Programming-Library/USART.o
-                0x00000000000033ea                receiveByte
+                0x0000000000001348        0xe ../AVR-Programming-Library/USART.o
+                0x0000000000001348                receiveByte
  .text.libgcc.div
-                0x00000000000033f8       0x28 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_udivmodhi4.o)
-                0x00000000000033f8                __udivmodhi4
+                0x0000000000001356       0x28 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_udivmodhi4.o)
+                0x0000000000001356                __udivmodhi4
  .text.libgcc.div
-                0x0000000000003420       0x28 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_divmodhi4.o)
-                0x0000000000003420                __divmodhi4
-                0x0000000000003420                _div
+                0x000000000000137e       0x28 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_divmodhi4.o)
+                0x000000000000137e                __divmodhi4
+                0x000000000000137e                _div
  .text.avr-libc
-                0x0000000000003448       0xc2 /usr/lib/gcc/avr/4.7.2/../../../avr/lib/avr5/libc.a(rand.o)
-                0x00000000000034e4                rand_r
-                0x00000000000034ea                rand
-                0x00000000000034f4                srand
+                0x00000000000013a6       0xc2 /usr/lib/gcc/avr/4.7.2/../../../avr/lib/avr5/libc.a(rand.o)
+                0x0000000000001442                rand_r
+                0x0000000000001448                rand
+                0x0000000000001452                srand
  .text.libgcc.mul
-                0x000000000000350a       0x16 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_muluhisi3.o)
-                0x000000000000350a                __muluhisi3
+                0x0000000000001468       0x16 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_muluhisi3.o)
+                0x0000000000001468                __muluhisi3
  .text.libgcc.mul
-                0x0000000000003520       0x10 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_mulshisi3.o)
-                0x0000000000003520                __mulshisi3
-                0x0000000000003526                __mulohisi3
+                0x000000000000147e       0x10 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_mulshisi3.o)
+                0x000000000000147e                __mulshisi3
+                0x0000000000001484                __mulohisi3
  .text.libgcc.div
-                0x0000000000003530       0x38 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_divmodsi4.o)
-                0x0000000000003530                __divmodsi4
+                0x000000000000148e       0x38 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_divmodsi4.o)
+                0x000000000000148e                __divmodsi4
  .text.libgcc.mul
-                0x0000000000003568       0x18 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_umulhisi3.o)
-                0x0000000000003568                __umulhisi3
+                0x00000000000014c6       0x18 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_umulhisi3.o)
+                0x00000000000014c6                __umulhisi3
  .text.libgcc.div
-                0x0000000000003580       0x44 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_udivmodsi4.o)
-                0x0000000000003580                __udivmodsi4
-                0x00000000000035c4                . = ALIGN (0x2)
+                0x00000000000014de       0x44 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_udivmodsi4.o)
+                0x00000000000014de                __udivmodsi4
+                0x0000000000001522                . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x00000000000035c4        0x0 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_exit.o)
-                0x00000000000035c4                exit
-                0x00000000000035c4                _exit
+ .fini9         0x0000000000001522        0x0 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_exit.o)
+                0x0000000000001522                exit
+                0x0000000000001522                _exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
@@ -797,11 +776,11 @@ LOAD /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x00000000000035c4        0x4 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_exit.o)
+ .fini0         0x0000000000001522        0x4 /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a(_exit.o)
  *(.fini0)
-                0x00000000000035c8                _etext = .
+                0x0000000000001526                _etext = .
 
-.data           0x0000000000800100      0x144 load address 0x00000000000035c8
+.data           0x0000000000800100      0x166 load address 0x0000000000001526
                 0x0000000000800100                PROVIDE (__data_start, .)
  *(.data)
  .data          0x0000000000800100        0x4 /usr/lib/gcc/avr/4.7.2/../../../avr/lib/avr5/libc.a(rand.o)
@@ -811,35 +790,36 @@ LOAD /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a
  .data.numbers  0x00000000008001a0       0x3c Character.o
  *(.rodata)
  .rodata        0x00000000008001dc       0x28 Character.o
- .rodata        0x0000000000800204       0x40 led_cube.o
+ .rodata        0x0000000000800204       0x61 led_cube.o
  *(.rodata*)
  *(.gnu.linkonce.d*)
-                0x0000000000800244                . = ALIGN (0x2)
-                0x0000000000800244                _edata = .
-                0x0000000000800244                PROVIDE (__data_end, .)
+                0x0000000000800266                . = ALIGN (0x2)
+ *fill*         0x0000000000800265        0x1 00
+                0x0000000000800266                _edata = .
+                0x0000000000800266                PROVIDE (__data_end, .)
 
-.bss            0x0000000000800244      0x1ae
-                0x0000000000800244                PROVIDE (__bss_start, .)
+.bss            0x0000000000800266      0x1ce
+                0x0000000000800266                PROVIDE (__bss_start, .)
  *(.bss)
  *(.bss*)
  *(COMMON)
- COMMON         0x0000000000800244      0x1ae led_cube.o
-                0x0000000000800244                groundDriver
-                0x0000000000800247                buttonController
-                0x0000000000800271                framebuffer
-                0x00000000008003a5                ringbuffer
-                0x00000000008003eb                timer_val
-                0x00000000008003ed                ledDriver
-                0x00000000008003f2                PROVIDE (__bss_end, .)
-                0x00000000000035c8                __data_load_start = LOADADDR (.data)
-                0x000000000000370c                __data_load_end = (__data_load_start + SIZEOF (.data))
+ COMMON         0x0000000000800266      0x1ce led_cube.o
+                0x0000000000800266                groundDriver
+                0x0000000000800269                buttonController
+                0x0000000000800293                framebuffer
+                0x00000000008003c7                ringbuffer
+                0x000000000080042d                timer_val
+                0x000000000080042f                ledDriver
+                0x0000000000800434                PROVIDE (__bss_end, .)
+                0x0000000000001526                __data_load_start = LOADADDR (.data)
+                0x000000000000168c                __data_load_end = (__data_load_start + SIZEOF (.data))
 
-.noinit         0x00000000008003f2        0x0
-                0x00000000008003f2                PROVIDE (__noinit_start, .)
+.noinit         0x0000000000800434        0x0
+                0x0000000000800434                PROVIDE (__noinit_start, .)
  *(.noinit*)
-                0x00000000008003f2                PROVIDE (__noinit_end, .)
-                0x00000000008003f2                _end = .
-                0x00000000008003f2                PROVIDE (__heap_start, .)
+                0x0000000000800434                PROVIDE (__noinit_end, .)
+                0x0000000000800434                _end = .
+                0x0000000000800434                PROVIDE (__heap_start, .)
 
 .eeprom         0x0000000000810000        0x0
  *(.eeprom*)
@@ -857,45 +837,45 @@ LOAD /usr/lib/gcc/avr/4.7.2/avr5/libgcc.a
 .signature
  *(.signature*)
 
-.stab           0x0000000000000000     0x8274
+.stab           0x0000000000000000     0x4cec
  *(.stab)
  .stab          0x0000000000000000      0x6cc /usr/lib/gcc/avr/4.7.2/../../../avr/lib/avr5/crtm328p.o
- .stab          0x00000000000006cc      0x75c ButtonController.o
+ .stab          0x00000000000006cc      0x5a0 ButtonController.o
                                         0x93c (size before relaxing)
- .stab          0x0000000000000e28      0x804 Character.o
+ .stab          0x0000000000000c6c      0x804 Character.o
                                         0xf3c (size before relaxing)
- .stab          0x000000000000162c      0x1e0 delay.o
+ .stab          0x0000000000001470      0x15c delay.o
                                         0x4b0 (size before relaxing)
- .stab          0x000000000000180c     0x3a20 FrameBuffer.o
+ .stab          0x00000000000015cc     0x108c FrameBuffer.o
                                        0x5d6c (size before relaxing)
- .stab          0x000000000000522c      0x150 GeneralFunctions.o
+ .stab          0x0000000000002658      0x150 GeneralFunctions.o
                                         0x3c0 (size before relaxing)
- .stab          0x000000000000537c      0x138 include_test.o
+ .stab          0x00000000000027a8      0x138 include_test.o
                                         0x330 (size before relaxing)
- .stab          0x00000000000054b4      0xd44 led_cube.o
-                                       0x10a4 (size before relaxing)
- .stab          0x00000000000061f8      0x714 LedDriver.o
+ .stab          0x00000000000028e0      0x8b8 led_cube.o
+                                        0xc18 (size before relaxing)
+ .stab          0x0000000000003198      0x714 LedDriver.o
                                         0xf48 (size before relaxing)
- .stab          0x000000000000690c      0x1c8 MessageHandler.o
+ .stab          0x00000000000038ac      0x1c8 MessageHandler.o
                                        0x102c (size before relaxing)
- .stab          0x0000000000006ad4      0x444 RingBuffer.o
+ .stab          0x0000000000003a74      0x444 RingBuffer.o
                                         0x624 (size before relaxing)
- .stab          0x0000000000006f18      0x6f0 Snake.o
+ .stab          0x0000000000003eb8      0x1c8 Snake.o
                                         0xa98 (size before relaxing)
- .stab          0x0000000000007608      0x240 Tritris.o
+ .stab          0x0000000000004080      0x240 Tritris.o
                                        0x1644 (size before relaxing)
- .stab          0x0000000000007848      0x204 Vector3d.o
+ .stab          0x00000000000042c0      0x204 Vector3d.o
                                         0x5c4 (size before relaxing)
- .stab          0x0000000000007a4c      0x204 ../AVR-Programming-Library/USART.o
+ .stab          0x00000000000044c4      0x204 ../AVR-Programming-Library/USART.o
                                         0x954 (size before relaxing)
- .stab          0x0000000000007c50      0x360 /usr/lib/gcc/avr/4.7.2/../../../avr/lib/avr5/libc.a(malloc.o)
+ .stab          0x00000000000046c8      0x360 /usr/lib/gcc/avr/4.7.2/../../../avr/lib/avr5/libc.a(malloc.o)
                                         0x798 (size before relaxing)
- .stab          0x0000000000007fb0      0x2c4 /usr/lib/gcc/avr/4.7.2/../../../avr/lib/avr5/libc.a(rand.o)
+ .stab          0x0000000000004a28      0x2c4 /usr/lib/gcc/avr/4.7.2/../../../avr/lib/avr5/libc.a(rand.o)
                                         0x324 (size before relaxing)
 
-.stabstr        0x0000000000000000     0x33ae
+.stabstr        0x0000000000000000     0x33a0
  *(.stabstr)
- .stabstr       0x0000000000000000     0x33ae /usr/lib/gcc/avr/4.7.2/../../../avr/lib/avr5/crtm328p.o
+ .stabstr       0x0000000000000000     0x33a0 /usr/lib/gcc/avr/4.7.2/../../../avr/lib/avr5/crtm328p.o
 
 .stab.excl
  *(.stab.excl)

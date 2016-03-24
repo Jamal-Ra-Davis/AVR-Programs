@@ -330,7 +330,8 @@ int main(void)
 
 
     //Testing serial stuff, remember to get rid of
-    char serialWords[64] = "TESTING TESTING 1234 567 89";//"DEFAULT TEXT IS COOL";
+    char serialWords[97] = "TESTING TESTING 1234 567 89";//"DEFAULT TEXT IS COOL";
+    //char serialWords[129] = "TEST MESSAGE THAT NEEDS TO BE 128 CHARACTERS LONG  THE OTHER MESSAGE WASNT LONG ENOUGH SO I AM ADDING TO IT 123456789 12345 1234";
     while(1)
     {
         int serialCnt = 0;
@@ -362,7 +363,8 @@ int main(void)
 
 
         int anm_num = 9;
-        int rand_anm = rand()%anm_num;
+        //int rand_anm = rand()%anm_num;
+        int rand_anm = 0;
         int rand_loops;
         int rand_delay;
         switch (rand_anm)
