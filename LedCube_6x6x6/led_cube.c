@@ -1,6 +1,4 @@
 //#define F_CPU 8000000
-
-
 #include <stdlib.h>
 #include <avr/power.h>
 #include <util/setbaud.h>
