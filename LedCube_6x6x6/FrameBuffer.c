@@ -2158,7 +2158,7 @@ int getSnakeDirection(Vector3d *head, Vector3d *dot, int direction)
     
     return -1;
 }
-void tritrisGame(FrameBuffer *framebuffer, int delay)
+void tritrisGame(FrameBuffer *framebuffer, uint8_t auto_play, int delay)
 {
     ButtonController controller;
     initButtonController(&controller);
@@ -2214,6 +2214,9 @@ void tritrisGame(FrameBuffer *framebuffer, int delay)
         
         Vector3d offset = corner.pos;
         Vector3d temp;
+
+	if (!auto_play)
+	{
         if ((states & (1 << controller.f_id))&&(states & (1 << controller.b_id)))
         {
             if (blockCanFall(&area, &corner))
@@ -2312,8 +2315,94 @@ void tritrisGame(FrameBuffer *framebuffer, int delay)
                 //rotateBlock(&corner, 0);        
             }
         }
-        
         old_states = states;
+	}
+	else
+	{
+		//Auto play enabled
+		uint8_t rand_action = rand()%8;//7 possible actions f, b, l, r, u, d, drop, and nothing
+		switch (rand_action)
+		{
+			case 0:
+			{
+				temp = offset;
+                		setVector3d(&temp, corner.pos.x - 1, corner.pos.y, corner.pos.z);
+                		setBlockPosition(&corner, temp);
+
+                		if (!blockOverlapsArea(&area, &corner))
+                    			offset = temp;
+                		setBlockPosition(&corner, offset);
+				break;
+			}
+			case 1:
+                        {
+				temp = offset;
+                		setVector3d(&temp, corner.pos.x, corner.pos.y - 1, corner.pos.z);
+        	        	setBlockPosition(&corner, temp);
+	
+                		if (!blockOverlapsArea(&area, &corner))
+                    			offset = temp;
+
+                		setBlockPosition(&corner, offset);
+                                break;
+                        }
+			case 2:
+                        {
+				temp = offset;
+                		setVector3d(&temp, corner.pos.x + 1, corner.pos.y, corner.pos.z);
+                		setBlockPosition(&corner, temp);
+
+                		if (!blockOverlapsArea(&area, &corner))
+                    			offset = temp;
+
+                		setBlockPosition(&corner, offset);
+                                break;
+                        }
+                        case 3:
+                        {
+				temp = offset;
+                		setVector3d(&temp, corner.pos.x, corner.pos.y + 1, corner.pos.z);
+                		setBlockPosition(&corner, temp);
+
+                		if (!blockOverlapsArea(&area, &corner))
+                    			offset = temp;
+
+                		setBlockPosition(&corner, offset);
+                                break;
+                        }
+			case 4:
+                        {
+				Tritris temp_block = corner;
+                		rotateBlock(&temp_block, 2);
+
+                		if (!blockOverlapsArea(&area, &temp_block))
+                    			corner = temp_block;
+                                break;
+                        }
+                        case 5:
+                        {
+				Tritris temp_block = corner;
+                		rotateBlock(&temp_block, 0);
+
+                		if (!blockOverlapsArea(&area, &temp_block))
+                    			corner = temp_block;
+                                break;
+                        }
+			case 6:
+			{
+				if (blockCanFall(&area, &corner))
+            			{
+                			setVector3d(&offset, corner.pos.x, corner.pos.y, corner.pos.z - 1);
+                			setBlockPosition(&corner, offset);
+            			}
+				break;
+			}
+			
+		}
+	}
+
+
+
 
         if (delay_cnt >= 20)
         {
@@ -2494,7 +2583,7 @@ void mainLoop(FrameBuffer *framebuffer, int delay)
                 }
                 case 5:
                 {
-                    tritrisGame(framebuffer, sub_selection*(delay/4));
+                    tritrisGame(framebuffer, 0, sub_selection*(delay/4));
                     break;
                 }
                 case 6:

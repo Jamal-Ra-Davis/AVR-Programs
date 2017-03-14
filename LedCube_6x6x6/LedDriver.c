@@ -171,7 +171,45 @@ void sr_loadData_alt(LedDriver* ledDriver, volatile uint8_t data[3][FBUF_REGS], 
     SR_PORT &= ~(1 << latchClk);
     SR_PORT |= (1 << latchClk);
 }
+/*
+void sr_loadData_noLatch(LedDriver* ledDriver, volatile uint8_t data[3][FBUF_REGS], int numBits)
+{
+	uint8_t regClk = ledDriver->regClk;
+    //uint8_t latchClk = ledDriver->latchClk;
 
+    uint8_t redData = ledDriver->redData;
+    uint8_t greenData = ledDriver->greenData;
+    uint8_t blueData = ledDriver->blueData;
+
+    uint8_t i, j;
+    uint8_t N = ((numBits - 1) >> 3) + 1;
+
+	for (i = N - 1; (i != 255) && numBits; i--)
+    {
+        for (j = 0; (j<8) && numBits; j++, numBits--)
+        {
+            SR_PORT &= ~(1 << regClk);
+
+            if ((1 << j) & data[0][i])
+                SR_PORT |= (1 << redData);
+            else
+                SR_PORT &= ~(1 << redData);
+
+            if ((1 << j) & data[1][i])
+                SR_PORT |= (1 << greenData);
+            else
+                SR_PORT &= ~(1 << greenData);
+
+            if ((1 << j) & data[2][i])
+                SR_PORT |= (1 << blueData);
+            else
+                SR_PORT &= ~(1 << blueData);
+
+            SR_PORT |= (1 << regClk);
+        }
+    }
+}
+*/
 void initGroundRegister(GroundDriver* groundDriver)
 {
     int i;
@@ -215,3 +253,25 @@ void sr_incrementGround(GroundDriver* groundDriver, FrameBuffer* framebuffer)
     if (framebuffer->currLevel >= FBUF_SZ)
         framebuffer->currLevel = 0;
 }
+/*
+void sr_incrementGround_noLatch(GroundDriver* groundDriver, FrameBuffer* framebuffer)
+{
+	GND_PORTS &= ~(1 << groundDriver->regClk);
+    //If current level == 0, set data line HIGH
+    if (framebuffer->currLevel == 0)
+    {
+        GND_PORTS |= (1 << groundDriver->data);
+    }
+    //Otherwise set LOW
+    else
+    {
+        GND_PORTS &= ~(1 << groundDriver->data);
+    }
+    //Clock in data bit
+    GND_PORTS |= (1 << groundDriver->regClk);
+
+    framebuffer->currLevel++;
+    if (framebuffer->currLevel >= FBUF_SZ)
+        framebuffer->currLevel = 0;
+}
+*/

@@ -114,7 +114,7 @@ void initTimer()
 
 ISR(TIMER0_COMPA_vect)
 {
-//    GND_PORTS &= 0xF0;
+	//    GND_PORTS &= 0xF0;
     GND_EN_PORT |= (1 << GND_EN_PIN);
     //TCNT1 = 0;//--
     sr_loadData_alt(&ledDriver, framebuffer.bufferBits[framebuffer.currLevel], 36);
@@ -275,7 +275,11 @@ int main(void)
             _delay_ms(500);
         }
 */
-        rotatePlane_anm(&framebuffer, rand()%2, RANDOM_COLOR, 250);
+
+
+        //rotatePlane_anm(&framebuffer, rand()%2, RANDOM_COLOR, 250);
+		//tritrisGame(&framebuffer, 0, 400);
+		snakeGame(&framebuffer, 0, 1500);
 
     }
 
@@ -360,9 +364,9 @@ int main(void)
             serialWords[serialCnt] = '\0';
 
 
-        int anm_num = 9;
-        int rand_anm = rand()%anm_num;
-        //int rand_anm = 0;
+        int anm_num = 9;//10, but need to fix memory issues before you can use tritis animation
+        int rand_anm = 9;//rand()%anm_num;
+        //int rand_anm = 9;
         int rand_loops;
         int rand_delay;
         switch (rand_anm)
@@ -481,7 +485,13 @@ int main(void)
             case 8:
             {
                 rand_delay = (rand()%11)*100 + 250;
-                snakeGame(&framebuffer, 1, rand_delay);
+                snakeGame(&framebuffer, 0, rand_delay);
+                break;
+            }
+	    case 9:
+            {
+                //rand_delay = (rand()%11)*100 + 250;
+                tritrisGame(&framebuffer, 0, 300);
                 break;
             }
         }
@@ -747,12 +757,12 @@ int main(void)
 //            marquee.offset--;
 //        }
       
-        char words2[5][64] = {
+        char words2[1][64] = {
                                 "WELCOME TO TECHPLACE  DONT LET YOUR DREAMS BE DREAMS",
-                                "SUCH BLINKY  WOW",
-                                "HOLLY WORK ON YOUR BMO",
-                                "LED CUBE TWO  ELECTRIC BOOGALOO",
-                                "JUST DO IT  FLEXING ACTION"
+                    //            "SUCH BLINKY  WOW",
+                    //            "HOLLY WORK ON YOUR BMO",
+                    //            "LED CUBE TWO  ELECTRIC BOOGALOO",
+                    //            "JUST DO IT  FLEXING ACTION"
                             };
         Marquee marquee2;
         

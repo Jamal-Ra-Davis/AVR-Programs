@@ -34,6 +34,8 @@ void sr_loadByte(LedDriver* ledDriver, uint8_t data);
 void sr_loadData_old(LedDriver* ledDriver, volatile uint8_t* data, int numBits);//Old function, want to reverse order of load
 void sr_loadData(LedDriver* ledDriver, volatile uint8_t* data, int numBits);
 void sr_loadData_alt(LedDriver* ledDriver, volatile uint8_t data[3][FBUF_REGS], int numBits);
+//void sr_loadData_noLatch(LedDriver* ledDriver, volatile uint8_t data[3][FBUF_REGS], int numBits);
 
 void initGroundRegister(GroundDriver* groundDriver);
 void sr_incrementGround(GroundDriver* groundDriver, FrameBuffer* framebuffer);
+//void sr_incrementGround_noLatch(GroundDriver* groundDriver, FrameBuffer* framebuffer);

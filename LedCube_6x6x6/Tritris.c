@@ -196,22 +196,6 @@ uint8_t blockCanFall(TritrisArea* gameArea, Tritris* block)
 
 uint8_t checkTritrisArea(FrameBuffer* framebuffer, TritrisArea* gameArea)
 {
-/*
-    clearFrameBuffer_(framebuffer);
-    for (int i=0; i<4; i++)
-    {
-        drawPlane(framebuffer, 2, i);
-        frameBufferToBits_DB(framebuffer);
-        delay_ms(250);
-    }
-    for (int i=0; i<4; i++)
-    {
-        clearPlane(framebuffer, 2, i);
-        frameBufferToBits_DB(framebuffer);
-        delay_ms(250);
-    }
-*/
-
     //Determine which levels are full
     //uint8_t levels_filled = 0x0F;
 
@@ -264,7 +248,8 @@ uint8_t checkTritrisArea(FrameBuffer* framebuffer, TritrisArea* gameArea)
             {
                 //if (levels_filled & (1 << k))
                 if (filled_levels[k])
-                    clearPlane(framebuffer, 2, k);
+                    drawPlane(framebuffer, 2, k, 0);
+                    //clearPlane(framebuffer, 2, k);
             }
             frameBufferToBits_DB_NEW(framebuffer);
             delay_ms(delay);
@@ -332,6 +317,8 @@ uint8_t checkAreaForGameOver(TritrisArea* gameArea)
         {
             for (int j=0; j<FBUF_SZ; j++)
             {
+
+		
                 if (gameArea->gameArea[k][i][j])
                     return 1;
             }

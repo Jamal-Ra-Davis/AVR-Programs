@@ -369,44 +369,45 @@ int main(void)
 
         if (dir == 0)
         {
-        if (rand()%2) 
-            r++;
-        else
-            r--;
+        	if (rand()%2) 
+            	r++;
+        	else
+            	r--;
         }
-        if (r < 0)
+        else if (dir == 1)
+        {
+        	if (rand()%2)    
+            	g++;
+        	else
+            	g--;
+        }
+        else if (dir == 2)
+        {
+        	if (rand()%2)    
+            	b++;
+       		else
+            	b--;
+        }
+
+
+		if (r < 0)
             r = 0;
         if (r > BIT_COUNTER)
-            r = BIT_COUNTER;       
-
-        else if (dir == 2)
-        {
-        if (rand()%2)    
-            g++;
-        else
-            g--;
-        }
-        if (g < 0)
+            r = BIT_COUNTER;
+		if (g < 0)
             g = 0;
-        if (g > BIT_COUNTER) 
+        if (g > BIT_COUNTER)
             g = BIT_COUNTER;
-        
-        else if (dir == 2)
-        {
-        if (rand()%2)    
-            b++;
-        else
-            b--;
-        }
-        if (b < 0)
+		if (b < 0)
             b = 0;
-        if (b > BIT_COUNTER) 
+        if (b > BIT_COUNTER)
             b = BIT_COUNTER;
+	
 
         clearFrameBuffer(&framebuffer);
-                    setFrameBufferColor(&framebuffer, r, g, b);
-                    frameBufferToBits_DB_alt(&framebuffer);
-                    _delay_ms(50);
+        setFrameBufferColor(&framebuffer, r, g, b);
+        frameBufferToBits_DB_alt(&framebuffer);
+        _delay_ms(50);
     
 
 

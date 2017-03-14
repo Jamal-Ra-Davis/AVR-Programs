@@ -64,7 +64,7 @@ int drawLine2d(FrameBuffer *framebuffer, uint8_t axis, uint8_t level, int x0, in
 int drawLine3d(FrameBuffer *framebuffer, Vector3d* start, Vector3d *end, uint8_t color);
 
 void drawPlane(FrameBuffer *framebuffer, uint8_t axis, uint8_t level, uint8_t color);
-void clearPlane(FrameBuffer *framebuffer, uint8_t axis, uint8_t level);
+//void clearPlane(FrameBuffer *framebuffer, uint8_t axis, uint8_t level);
 void drawBox(FrameBuffer *framebuffer, Vector3d* start, Vector3d* end, uint8_t color);
 
 void drawBinaryNumber(FrameBuffer *framebuffer, uint16_t number, uint8_t axis, uint8_t level, uint8_t color);
@@ -89,7 +89,7 @@ void pointCloud_anm(FrameBuffer *framebuffer, uint8_t axis, uint8_t color, int d
 void controlPixel(FrameBuffer *framebuffer, int delay);
 void snakeGame(FrameBuffer *framebuffer, uint8_t auto_play, int delay);
 int getSnakeDirection(Vector3d *head, Vector3d *dot, int direction);
-void tritrisGame(FrameBuffer *framebuffer, int delay);
+void tritrisGame(FrameBuffer *framebuffer, uint8_t auto_play, int delay);
 
 void powerTest(FrameBuffer *framebuffer, int delay);
 
