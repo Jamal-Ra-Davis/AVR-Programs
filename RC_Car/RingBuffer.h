@@ -21,4 +21,4 @@ typedef struct {
 void initRingBuf(RingBuffer *ringbuffer);
 void pushRingBuf(RingBuffer *ringbuffer, uint8_t val);
 uint8_t popRingBuf(RingBuffer *ringbuffer);
-
+uint8_t peekRingBuf(RingBuffer *ringbuffer);

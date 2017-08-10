@@ -65,3 +65,12 @@ uint8_t popRingBuf(RingBuffer *ringbuffer)
 
     return val;
 }
+uint8_t peekRingBuf(RingBuffer *ringbuffer)
+{
+	ringbuffer->error = 0;
+	if ((ringbuffer->start == ringbuffer->end)&&(ringbuffer->cnt == 0))
+    {
+        ringbuffer->error = 2;
+        return 0;
+    }
+}

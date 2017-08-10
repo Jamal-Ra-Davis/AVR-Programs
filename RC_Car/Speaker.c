@@ -19,7 +19,7 @@ void initSpeaker()
     TCCR0A |= (1 << COM0A0) | (1 << WGM01);
     TCCR0B |= (1 << CS01) | (1 << CS00);
 
-	SPK_REG |= SPK_PIN;
+	//SPK_REG |= SPK_PIN;
 
 	TIMSK2 |= (1 << TOIE2);
 }

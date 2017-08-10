@@ -34,14 +34,13 @@ Discarded input sections
  .bss           0x0000000000000000        0x0 rc_car.o
  .text.serialDataAvailable
                 0x0000000000000000        0x8 rc_car.o
- .text.USART_Flush
-                0x0000000000000000       0x10 rc_car.o
+ .text.USART_Recieve
+                0x0000000000000000        0xe rc_car.o
  .text.readAll  0x0000000000000000       0x3e rc_car.o
- .data.top      0x0000000000000000        0x4 rc_car.o
- .bss.idx       0x0000000000000000        0x2 rc_car.o
- .bss.cnt       0x0000000000000000        0x2 rc_car.o
  .text          0x0000000000000000        0x0 RingBuffer.o
  .bss           0x0000000000000000        0x0 RingBuffer.o
+ .text.peekRingBuf
+                0x0000000000000000       0x22 RingBuffer.o
  .text          0x0000000000000000        0x0 Speaker.o
  .bss           0x0000000000000000        0x0 Speaker.o
  .text.setSpeakerOsc
@@ -266,7 +265,7 @@ END GROUP
 .rela.plt
  *(.rela.plt)
 
-.text           0x0000000000000000      0x630
+.text           0x0000000000000000      0x5e4
  *(.vectors)
  .vectors       0x0000000000000000       0x68 /usr/lib/gcc/avr/4.8.2/../../../avr/lib/avr5/crtm328p.o
                 0x0000000000000000                __vectors
@@ -372,43 +371,43 @@ END GROUP
  .text.sendString
                 0x00000000000001c6       0x44 rc_car.o
                 0x00000000000001c6                sendString
- .text.USART_Recieve
-                0x000000000000020a        0xe rc_car.o
-                0x000000000000020a                USART_Recieve
- .text.sendAT   0x0000000000000218       0x18 rc_car.o
-                0x0000000000000218                sendAT
+ .text.USART_Flush
+                0x000000000000020a       0x10 rc_car.o
+                0x000000000000020a                USART_Flush
+ .text.sendAT   0x000000000000021a       0x18 rc_car.o
+                0x000000000000021a                sendAT
  .text.setupHM11
-                0x0000000000000230       0x38 rc_car.o
-                0x0000000000000230                setupHM11
+                0x0000000000000232       0x10 rc_car.o
+                0x0000000000000232                setupHM11
  .text.__vector_18
-                0x0000000000000268       0x50 rc_car.o
-                0x0000000000000268                __vector_18
+                0x0000000000000242       0x50 rc_car.o
+                0x0000000000000242                __vector_18
  .text.startup.main
-                0x00000000000002b8      0x1b4 rc_car.o
-                0x00000000000002b8                main
+                0x0000000000000292      0x190 rc_car.o
+                0x0000000000000292                main
  .text.initRingBuf
-                0x000000000000046c       0x22 RingBuffer.o
-                0x000000000000046c                initRingBuf
+                0x0000000000000422       0x22 RingBuffer.o
+                0x0000000000000422                initRingBuf
  .text.pushRingBuf
-                0x000000000000048e       0x64 RingBuffer.o
-                0x000000000000048e                pushRingBuf
+                0x0000000000000444       0x64 RingBuffer.o
+                0x0000000000000444                pushRingBuf
  .text.popRingBuf
-                0x00000000000004f2       0x66 RingBuffer.o
-                0x00000000000004f2                popRingBuf
+                0x00000000000004a8       0x66 RingBuffer.o
+                0x00000000000004a8                popRingBuf
  .text.initSpeaker
-                0x0000000000000558       0x5a Speaker.o
-                0x0000000000000558                initSpeaker
+                0x000000000000050e       0x58 Speaker.o
+                0x000000000000050e                initSpeaker
  .text.setSpeaker
-                0x00000000000005b2        0xc Speaker.o
-                0x00000000000005b2                setSpeaker
+                0x0000000000000566        0xc Speaker.o
+                0x0000000000000566                setSpeaker
  .text.__vector_9
-                0x00000000000005be       0x6e Speaker.o
-                0x00000000000005be                __vector_9
-                0x000000000000062c                . = ALIGN (0x2)
+                0x0000000000000572       0x6e Speaker.o
+                0x0000000000000572                __vector_9
+                0x00000000000005e0                . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x000000000000062c        0x0 /usr/lib/gcc/avr/4.8.2/avr5/libgcc.a(_exit.o)
-                0x000000000000062c                exit
-                0x000000000000062c                _exit
+ .fini9         0x00000000000005e0        0x0 /usr/lib/gcc/avr/4.8.2/avr5/libgcc.a(_exit.o)
+                0x00000000000005e0                exit
+                0x00000000000005e0                _exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
@@ -427,11 +426,11 @@ END GROUP
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x000000000000062c        0x4 /usr/lib/gcc/avr/4.8.2/avr5/libgcc.a(_exit.o)
+ .fini0         0x00000000000005e0        0x4 /usr/lib/gcc/avr/4.8.2/avr5/libgcc.a(_exit.o)
  *(.fini0)
-                0x0000000000000630                _etext = .
+                0x00000000000005e4                _etext = .
 
-.data           0x0000000000800100       0x40 load address 0x0000000000000630
+.data           0x0000000000800100        0xc load address 0x00000000000005e4
                 0x0000000000800100                PROVIDE (__data_start, .)
  *(.data)
  .data          0x0000000000800100        0x0 /usr/lib/gcc/avr/4.8.2/../../../avr/lib/avr5/crtm328p.o
@@ -450,32 +449,32 @@ END GROUP
  *(.rodata)
  *(.rodata*)
  .rodata.str1.1
-                0x0000000000800100       0x40 rc_car.o
+                0x0000000000800100        0xc rc_car.o
  *(.gnu.linkonce.d*)
-                0x0000000000800140                . = ALIGN (0x2)
-                0x0000000000800140                _edata = .
-                0x0000000000800140                PROVIDE (__data_end, .)
+                0x000000000080010c                . = ALIGN (0x2)
+                0x000000000080010c                _edata = .
+                0x000000000080010c                PROVIDE (__data_end, .)
 
-.bss            0x0000000000800140       0x4e
-                0x0000000000800140                PROVIDE (__bss_start, .)
+.bss            0x000000000080010c       0x4e
+                0x000000000080010c                PROVIDE (__bss_start, .)
  *(.bss)
  *(.bss*)
  *(COMMON)
- COMMON         0x0000000000800140       0x4e rc_car.o
-                0x0000000000800140                spk_cnt
-                0x0000000000800142                spk_periods
-                0x0000000000800146                spk_idx
-                0x0000000000800148                rBuf
-                0x000000000080018e                PROVIDE (__bss_end, .)
-                0x0000000000000630                __data_load_start = LOADADDR (.data)
-                0x0000000000000670                __data_load_end = (__data_load_start + SIZEOF (.data))
+ COMMON         0x000000000080010c       0x4e rc_car.o
+                0x000000000080010c                spk_cnt
+                0x000000000080010e                spk_periods
+                0x0000000000800112                spk_idx
+                0x0000000000800114                rBuf
+                0x000000000080015a                PROVIDE (__bss_end, .)
+                0x00000000000005e4                __data_load_start = LOADADDR (.data)
+                0x00000000000005f0                __data_load_end = (__data_load_start + SIZEOF (.data))
 
-.noinit         0x000000000080018e        0x0
-                0x000000000080018e                PROVIDE (__noinit_start, .)
+.noinit         0x000000000080015a        0x0
+                0x000000000080015a                PROVIDE (__noinit_start, .)
  *(.noinit*)
-                0x000000000080018e                PROVIDE (__noinit_end, .)
-                0x000000000080018e                _end = .
-                0x000000000080018e                PROVIDE (__heap_start, .)
+                0x000000000080015a                PROVIDE (__noinit_end, .)
+                0x000000000080015a                _end = .
+                0x000000000080015a                PROVIDE (__heap_start, .)
 
 .eeprom         0x0000000000810000        0x0
  *(.eeprom*)
@@ -496,25 +495,25 @@ END GROUP
 .user_signatures
  *(.user_signatures*)
 
-.stab           0x0000000000000000     0x297c
+.stab           0x0000000000000000     0x2910
  *(.stab)
  .stab          0x0000000000000000      0x6cc /usr/lib/gcc/avr/4.8.2/../../../avr/lib/avr5/crtm328p.o
  .stab          0x00000000000006cc      0x624 Lights.o
                                         0x678 (size before relaxing)
  .stab          0x0000000000000cf0      0x4e0 MotorDriver.o
                                         0x708 (size before relaxing)
- .stab          0x00000000000011d0      0xa20 rc_car.o
-                                        0xd68 (size before relaxing)
- .stab          0x0000000000001bf0      0x5c4 RingBuffer.o
-                                        0x7a4 (size before relaxing)
- .stab          0x00000000000021b4      0x498 Speaker.o
-                                        0x714 (size before relaxing)
- .stab          0x000000000000264c      0x330 ../AVR-Programming-Library/USART.o
+ .stab          0x00000000000011d0      0x9b4 rc_car.o
+                                        0xcd8 (size before relaxing)
+ .stab          0x0000000000001b84      0x5d0 RingBuffer.o
+                                        0x834 (size before relaxing)
+ .stab          0x0000000000002154      0x48c Speaker.o
+                                        0x708 (size before relaxing)
+ .stab          0x00000000000025e0      0x330 ../AVR-Programming-Library/USART.o
                                         0xabc (size before relaxing)
 
-.stabstr        0x0000000000000000     0x143d
+.stabstr        0x0000000000000000     0x141b
  *(.stabstr)
- .stabstr       0x0000000000000000     0x143d /usr/lib/gcc/avr/4.8.2/../../../avr/lib/avr5/crtm328p.o
+ .stabstr       0x0000000000000000     0x141b /usr/lib/gcc/avr/4.8.2/../../../avr/lib/avr5/crtm328p.o
 
 .stab.excl
  *(.stab.excl)

@@ -7,54 +7,15 @@
 #include "Lights.h"
 #include "RingBuffer.h"
 #include "Speaker.h"
-/*
-#define MOTOR_PORT PORTB
-#define M_STBY (1 << PB0)
-#define MA_PIN (1 << PB1)
-#define MB_PIN (1 << PB2)
-#define MA_DIR1 (1 << PB3)
-#define MA_DIR2 (1 << PB4)
-#define MB_DIR1 (1 << PB5)
-#define MB_DIR2 (1 <<PB6)
-#define MA_SPD OCR1A
-#define MB_SPD OCR1B
 
+#define BT_RST_PORT PORTD
+#define BT_RST_PIN (1 << PD2)
 
-#define SPEAKER_PORT PORTD
-#define SPEAKER_PIN (1 << PD6)
-#define SPEAKER_PER OCR0A
-*/
 #define BAUD_RATE 9600
 #define MYUBRR ((8000000UL/BAUD_RATE)/16 - 1)
 
-/*
-void setSpeakerOsc(int b)
-{
-	if (b)
-	{
-		TCCR0A |= (1 << COM0A0);
-	}
-	else
-	{
-		TCCR0A &= ~(1 << COM0A0);
-	}
-}
-*/
-int cnt = 0;
-int idx = 0;
-int top[2] = {124, 147};
-/*
-ISR(TIMER2_OVF_vect)
-{
-	cnt++;
-	if (cnt >= 20)
-	{
-		cnt = 0;
-		idx ^= 1;
-		OCR0A = top[idx];
-	}
-}
-*/
+
+
 uint8_t serialDataAvailable()
 {
     return (UCSR0A & (1<<RXC0));
@@ -113,12 +74,16 @@ void sendAT(char *cmd)
 void setupHM11()
 {
 	sendAT("AT");
+/*
 	sendAT("AT+NOTI0");  
   	sendAT("AT+ROLE0");
  	sendAT("AT+RESET");
   	sendAT("AT+SHOW1");
   	sendAT("AT+IMME1");
  	sendAT("AT+NAMEPLZ_WORK");
+*/
+	sendAT("AT+RENEW");
+	
 }
 
 
@@ -126,7 +91,7 @@ RingBuffer rBuf;
 ISR(USART_RX_vect) 
 {
 	uint8_t val = UDR0; 
- 	pushRingBuf(&rBuf, /*receiveByte()*/val);
+ 	pushRingBuf(&rBuf, val);
 }
 
 int main(void) 
@@ -148,63 +113,12 @@ int main(void)
 
 
 
-	while (0)
-	{
-		//USART_Transmit(0xA5);
-		//_delay_ms(2);
-		sendAT("AT");
-	}
-
-	//_delay_ms(500);
-	//setupHM11();
-
-/*
-	//Set up speaker oscillator
-	//int top[2] = {124, 147};
-	TCNT0 = 0;
-	OCR0A = 150;//top[idx];
-	TCCR0A |= (1 << COM0A0) | (1 << WGM01);
-	TCCR0B |= (1 << CS01) | (1 << CS00);
-
-	DDRD |= (1 << PD6);
-*/
-
 	initSpeaker();
-	setSpeaker(1);
-
+	//setSpeaker(1);
 
 	initMotorDriver();
-	//Set up motor contol PWM
-//	DDRB = 0x7F;
-//	MOTOR_PORT &= ~(MA_DIR1 | MA_DIR2 | MB_DIR1 | MB_DIR2 | M_STBY);
-
-//	TCNT1 = 0;
-//    OCR1A = 256; //MA Speed
-//    OCR1B = 200; //MB Speed
-
-//	TCCR1A |= (1 << COM1A1) | (1 << COM1B1) | (1 << WGM11) /*| (1 << WGM10)*/;
-//	TCCR1B |= /*(1 << WGM13)  | (1 << WGM12) |*/ (1 << CS10);
-/*
-	TCNT1 = 0; 
-    OCR1A = 666;
-    
-    TCCR1A |= (1 << COM1A0);
-    TCCR1B |= (1 << WGM12) | (1 << CS10);
-*/
-	
-
-	//Set up head light control PWM and speaker freq toggle
-/*
-	TCNT2 = 0;
-	OCR2B = 0;//255;
-	TCCR2A |= (1 << COM2B1) | (1 << WGM21) | (1 << WGM20);
-	TCCR2B |= (0 << WGM22) | (0 << CS22) | (1 << CS21) | (0 << CS20);
-	DDRD |= (1 << PD3);
-*/
 	initLights();
 
-	//TIMSK2 |= (1 << TOIE2);
-	DDRB |= (1 << PB7);	
 	sei();
 
 	for (int i=0; i<256; i++)
@@ -225,51 +139,23 @@ int main(void)
 		_delay_ms(1000);
 	}
 
-	//DDRD |= (1 << PD2);
-	//PORTD |= ~(1 << PD2);
-	
-	//PORTD |= (1 << PD4);
 	setRearLights(RL0, 1);
 	_delay_ms(3000);
-	//PORTD &= ~(1 << PD4);
 	setRearLights(RL0, 0);
-	//PORTD |= (1 << PD5);
 	setRearLights(RL1, 1);
 	_delay_ms(3000);
-	//PORTD |= (1 << PD4);
 	setRearLights(RL0, 1);
 	_delay_ms(3000);
-	//PORTD |= (1 << PD2);
 
-	_delay_ms(2000);
-//	setHeadLights(0);
 	setupHM11();
-//	setHeadLights(255);
 
 	
 
 	uint8_t temp;
-	//MOTOR_PORT |= M_STBY;
 	setMotorStandby(ENABLE_MOTOR);
 
 
-	while(serialDataAvailable())
-	{
-		USART_Recieve();
-	}	
-
-	
-	//setMotorSpeed(MA, 128, FORWARD);	
-		/*
-	    MOTOR_PORT &= ~(MA_DIR1 | MA_DIR2 | MB_DIR1 | MB_DIR2);
-        OCR1A = 0;
-        temp = MOTOR_PORT;
-        temp &= ~(MA_DIR1 | MA_DIR2 | MB_DIR1 | MB_DIR2);
-        temp |= MA_DIR1;
-        MOTOR_PORT = temp;
-        OCR1A = 255;
-		*/
-
+	USART_Flush();
 
 	setRearLights(RL0, 1);
 	setRearLights(RL1, 1);
