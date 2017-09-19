@@ -1,9 +1,16 @@
 #include <avr/io.h>
 #include <util/delay.h>
+#include <avr/power.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
+#include "RingBuffer.h"
 
-#define F_CPU 1000000UL
+#define F_CPU 8000000UL
+
+#define BAUD_RATE 9600
+#define MYUBRR ((F_CPU/BAUD_RATE)/16 - 1)
+
+
 
 #define FBUF_SZ 60
 #define FBUF_HEIGHT 3
@@ -68,6 +75,21 @@ void clearPixel(int x, int y, int z, FrameBuffer *buf);
 void clearBuffer(FrameBuffer *buf);
 void setBuffer(FrameBuffer *buf);
 
+uint8_t serialDataAvailable()
+{
+    return (UCSR0A & (1<<RXC0));
+}
+unsigned char USART_Recieve()
+{
+    while (!(UCSR0A & (1 << RXC0)));
+    return UDR0;
+}
+uint8_t usart_val=0;
+ISR(USART_RX_vect)
+{
+    usart_val = UDR0;
+}
+
 uint8_t spi_tranceiver(uint8_t byte)
 {
     SPDR = byte;
@@ -78,36 +100,32 @@ uint8_t spi_tranceiver(uint8_t byte)
 
 ISR(INT0_vect)//Hall-effect trigger
 {
-	uint32_t delta = SYS_TIMER - time_delta;
+	uint32_t t_delta = SYS_TIMER - time_delta;
 	time_delta = SYS_TIMER;
-	if (delta >= 1000)
+	if (t_delta >= 1000)
 		OCR0A = DEFAULT_INT_DELAY;
-	else if (delta >= 491)
+	else if (t_delta >= 491)
 		OCR0A = 255;
-	else if (delta <= 32)
+	else if (t_delta <= 32)
 		OCR0A = 16;
 	else
 	{
 		//OCR0A = calcIntDelay(delta);
 
-		uint32_t val = 533*delta - 512;//== 533*delta + 512 - 1024
-		/*
-		if (val % 1024U < 512)
-		{
-			val = val >> 10;
-			val--;
-		}
-		else
-		{
-			val = val >> 10;
-		}
-		*/
+		uint32_t val = 533*t_delta - 512;//== 533*t_delta + 512 - 1024
+//		if (val % 1024U < 512)
+//		{
+//			val = val >> 10;
+//			val--;
+//		}
+//		else
+//		{
+//			val = val >> 10;
+//		}
 		OCR0A = (uint8_t)(val >> 10);
 	}
-
 	TCNT0 = 0;
 	buf_idx = 0;
-	//LED_PORT = fbuf[buf_idx];
 }
 int w_idx, b_idx;
 ISR(TIMER0_COMPA_vect)
@@ -143,6 +161,8 @@ ISR(TIMER2_COMPA_vect)
 int main(void) 
 {
     //-----------INITS------------//
+	clock_prescale_set(clock_div_1);
+
 	LED_DDR = 0xFF;
 	LED_PORT = 0x00;
 	int i=0;
@@ -194,7 +214,8 @@ int main(void)
 
 	//Enable CTC mode with div by 8
 	TCCR0A |= (1 << WGM01); //CTC
-	TCCR0B |= (1 << CS01); //Div by 8
+	//TCCR0B |= (1 << CS01); //Div by 8
+	TCCR0B |= (1 << CS01) | (1 << CS00); //Div by 64
 
 	OCR0A = 68;//1800Hz @ Fclk = 1Mhz/8
 
@@ -202,9 +223,11 @@ int main(void)
 	TIMSK0 |= (1 << OCIE0A);
 
 
+
 	//Set up SYS_CLK timer
 	TCCR2A |= (1 << WGM21); 
-	TCCR2B |= (1 << CS20); //Divide by 1 @ 1MHz
+	//TCCR2B |= (1 << CS20); //Divide by 1 @ 1MHz
+	TCCR2B |= (1 << CS21); //Divide by 8 @ 1MHz
 	OCR2A = TIMER_MAX;
 	TIMSK2 |= (1 << OCIE2A);
 
@@ -214,8 +237,20 @@ int main(void)
 	EIMSK |= (1 << INT0);
 
 
+	//Setup SPI
 	SPCR |= (1 << SPE) | (1 << MSTR);
+	SPSR |= (1 << SPI2X);
 	PORTB &= ~(CLK_PIN | DATA_PIN | LAT_PIN);
+
+
+	//Init serial
+    UBRR0H = (unsigned char)(MYUBRR >> 8);
+    UBRR0L = (unsigned char)MYUBRR;
+    UCSR0B = (1 << RXEN0) | (1 << TXEN0)|(1<<RXCIE0)|(0<<UDRIE0);
+    /* Set frame format: 8data, 1stop bit no parity */
+    UCSR0C = (1<<UCSZ01)|(1<<UCSZ00);
+
+
 	sei();
 	
 //	while(1)//Freedom loop
@@ -281,6 +316,22 @@ int main(void)
     _delay_ms(5000);
 	i=0;
 	delta = SYS_TIMER;
+
+
+	while (1)
+	{
+		clearBuffer(&frame_buf);
+		uint8_t sel_val = usart_val;
+		if (sel_val >= 1 && sel_val <= 3)
+		{
+			for (int i=0; i<FBUF_SZ; i++)
+			{
+				frame_buf.buffer[sel_val-1][i] = 0xFF;
+			}
+		}
+		_delay_ms(50);
+	}	
+
     //-------EVENT LOOP-----------//
     while(1) 
     {
