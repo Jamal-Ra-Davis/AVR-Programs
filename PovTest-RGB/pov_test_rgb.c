@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/power.h>
@@ -11,7 +12,7 @@
 #define BAUD_RATE 9600
 #define MYUBRR ((F_CPU/BAUD_RATE)/16 - 1)
 
-
+#define M_SPI(DATA_BYTE) {SPDR = DATA_BYTE; while (!(SPSR & (1 << SPIF)));}
 
 #define FBUF_SZ 60
 #define FBUF_HEIGHT 3
@@ -22,6 +23,7 @@
 #define CLK_PIN (1 << PB5)
 #define LAT_PIN (1 << PB2)
 #define DATA_PIN (1 << PB3)
+#define TEST_PIN (1 << PB0)
 
 #define DEFAULT_INT_DELAY 68
 
@@ -59,6 +61,9 @@ const uint8_t NUM_BUF[10][8] PROGMEM = {
 							{0x00, 0x00, 0x30, 0x48, 0x48, 0x3E, 0x00, 0x00} //9
 						};
 */
+
+void writeCharacter(char c, int index, uint8_t r, uint8_t g, uint8_t b, int ub, int lb, FrameBuffer *buf);
+void writeString(char *str, int index, uint8_t r, uint8_t g, uint8_t b, int ub, int lb, FrameBuffer *buf);
 void writeDigit(uint8_t digit, int index, uint8_t r, uint8_t g, uint8_t b, FrameBuffer *buf);
 void writeNumber(long number, int idx, uint8_t r, uint8_t g, uint8_t b, FrameBuffer *buf);
 uint8_t calcIntDelay(uint16_t period);
@@ -110,26 +115,29 @@ ISR(INT0_vect)//Hall-effect trigger
 	TCNT0 = 0;
 	buf_idx = 0;
 }
-int w_idx, b_idx;
+int w_idx, b_idx, i_idx;
 ISR(TIMER0_COMPA_vect)
 {
-/*
-	w_idx = buf_idx + 20;
+
+	//4us
+	w_idx = buf_idx + 20;//Bacwards  with b_idx
 	if (w_idx >= FBUF_SZ)
 		w_idx -= FBUF_SZ;
 
-	b_idx = buf_idx + 40;
+	b_idx = buf_idx + 40;//Bacwards
 	if (b_idx >= FBUF_SZ)
 		b_idx -= FBUF_SZ;
 
 
+/*
 	LED_PORT &= ~LAT_PIN;
 	spi_tranceiver(frame_buf.buffer[2][b_idx]);
 	spi_tranceiver(frame_buf.buffer[1][w_idx]);
 	spi_tranceiver(frame_buf.buffer[0][buf_idx]);
 	LED_PORT |= LAT_PIN;
 */
-	
+
+/*
 	//Start frame
     spi_tranceiver(0x00);
     spi_tranceiver(0x00);
@@ -146,16 +154,86 @@ ISR(TIMER0_COMPA_vect)
         spi_tranceiver(frame_buf.buffer[buf_idx][i][RED]);
     }
 
+	for (int i=0; i<8; i++)
+    {
+        spi_tranceiver(0xFF);
+        spi_tranceiver(frame_buf.buffer[w_idx][i][BLUE]);
+        spi_tranceiver(frame_buf.buffer[w_idx][i][GREEN]);
+        spi_tranceiver(frame_buf.buffer[w_idx][i][RED]);
+    }
+
+	for (int i=0; i<8; i++)
+    {
+        spi_tranceiver(0xFF);
+        spi_tranceiver(frame_buf.buffer[b_idx][i][BLUE]);
+        spi_tranceiver(frame_buf.buffer[b_idx][i][GREEN]);
+        spi_tranceiver(frame_buf.buffer[b_idx][i][RED]);
+    }
+
     //end frame
     for (int i=0; i<8; i += 16)
     {
         spi_tranceiver(0xFF);
     }
+*/
 
+	//PORTB |= TEST_PIN;
+	//Start frame
+    M_SPI(0x00);
+    M_SPI(0x00);
+    M_SPI(0x00);
+    M_SPI(0x00);
+
+//	PORTB |= TEST_PIN;
+    //led frames
+	uint8_t i;
+    for (i=0; i<8; i++)
+    {
+        M_SPI(0xFF);
+		//M_SPI(0x00);
+		//M_SPI(0x00);
+		//M_SPI(0x00);
+        M_SPI(frame_buf.buffer[buf_idx][i][BLUE] >> 2);
+        M_SPI(frame_buf.buffer[buf_idx][i][GREEN] >> 2);
+        M_SPI(frame_buf.buffer[buf_idx][i][RED]);
+    }
+	//PORTB &= ~TEST_PIN;
+    for (i=0; i<8; i++)
+    {
+        M_SPI(0xFF);
+		//M_SPI(0x00);
+		//M_SPI(0x00);
+		//M_SPI(0x00);
+        M_SPI(frame_buf.buffer[w_idx][i][BLUE] >> 2);
+        M_SPI(frame_buf.buffer[w_idx][i][GREEN]);
+        M_SPI(frame_buf.buffer[w_idx][i][RED] >> 2);
+    }
+
+    for (i=0; i<8; i++)
+    {
+        M_SPI(0xFF);
+        M_SPI(frame_buf.buffer[b_idx][i][BLUE]);
+        M_SPI(frame_buf.buffer[b_idx][i][GREEN] >> 2);
+        M_SPI(frame_buf.buffer[b_idx][i][RED] >> 2);
+    }
+
+
+    //end frame
+//	M_SPI(0xFF);
+//	M_SPI(0xFF);
+//	M_SPI(0xFF);
+//	M_SPI(0xFF);
+    for (int i=0; i<8*3; i += 16)
+    {
+        M_SPI(0xFF);
+    }
+	
 
 	buf_idx++;
 	if (buf_idx >= FBUF_SZ)
 		buf_idx = 0;	
+
+	//PORTB &= ~TEST_PIN;
 }
 ISR(TIMER2_COMPA_vect)
 {
@@ -165,6 +243,8 @@ ISR(TIMER2_COMPA_vect)
 
 int main(void) 
 {
+	i_idx = 0;
+
     //-----------INITS------------//
 	clock_prescale_set(clock_div_1);
 
@@ -185,7 +265,7 @@ int main(void)
 	//TCCR0B |= (1 << CS01); //Div by 8
 	TCCR0B |= (1 << CS01) | (1 << CS00); //Div by 64
 
-	OCR0A = 68;//1800Hz @ Fclk = 1Mhz/8
+	OCR0A = 200;//68;//1800Hz @ Fclk = 1Mhz/8
 
 	//Interrupt @556us
 	TIMSK0 |= (1 << OCIE0A);
@@ -220,9 +300,24 @@ int main(void)
 
 
 	sei();
-	_delay_ms(1000);
+	//_delay_ms(1000);
 
     //-------EVENT LOOP-----------//
+	while(1)
+	{
+		for (int i=0; i<FBUF_SZ; i++)
+		{
+			i_idx = i;
+			clearBuffer(&frame_buf);
+			writeString("NOLAN", 10-i, (rand() % 200) + 50, (rand() % 200) + 50, (rand() % 200) + 50, FBUF_SZ-1-5, 5, &frame_buf);
+			for (int j=0; j<8; j++)
+				setPixel(0, j, 255, 255, 255, &frame_buf);		
+			//writeNumber(i, 20, (i%2)*100, (i>>1)%2 * 100, (i>>2)%2 * 100, &frame_buf);
+			_delay_ms(50);
+		}
+	}
+
+
 	while (0)
 	{
 		//clearBuffer(&frame_buf);
@@ -319,7 +414,64 @@ int main(void)
 
 }
 
+void writeCharacter(char c, int index, uint8_t r, uint8_t g, uint8_t b, int ub, int lb, FrameBuffer *buf)
+{
+	if (c >= 97 && c <= 122)
+		c -= 32;
+	if (c < 65 || c > 90)
+		return;
 
+	c -= 65;
+
+	for (int i=0; i<8; i++)
+    {
+        //int write_idx = index + i;
+        int write_idx = index - i;
+
+		if (write_idx > ub || write_idx < lb)
+            continue;
+
+        if (write_idx >= FBUF_SZ)
+            write_idx -= FBUF_SZ;
+        if (write_idx < 0)
+            write_idx += FBUF_SZ;
+
+      //buf[write_idx] |= NUM_BUF[digit][i];
+        //buf[write_idx] |= NUM_BUF[digit][7-i];
+
+//       buf->buffer[z][write_idx] |= pgm_read_byte(&(NUM_BUF[digit][7-i]));
+
+
+        uint8_t num_data = pgm_read_byte(&(CHAR_BUF[(uint8_t)c][7-i]));
+        for (int j=0; j<8; j++)
+        {
+            if ((1 << j) & num_data)
+                setPixel(write_idx, j, r, g, b, buf);
+        }
+    }	
+
+}
+void writeString(char *str, int idx, uint8_t r, uint8_t g, uint8_t b, int ub, int lb, FrameBuffer *buf)
+{
+	if (str == NULL)
+		return;
+
+	if (idx >= FBUF_SZ)
+        idx -= FBUF_SZ;
+    if (idx < 0)
+        idx += FBUF_SZ;
+	
+	for (int str_idx=0; str[str_idx] != '\0'; str_idx++)
+    {
+        writeCharacter(str[str_idx], idx, r, g, b, ub, lb, buf);
+
+        idx += 8;
+        if (idx >= FBUF_SZ)
+            idx -= FBUF_SZ;
+        if (idx < 0)
+            idx += FBUF_SZ;
+    }
+}
 void writeDigit(uint8_t digit, int index, uint8_t r, uint8_t g, uint8_t b, FrameBuffer *buf)
 {
     if (digit >= 10)
